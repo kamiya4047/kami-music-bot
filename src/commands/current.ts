@@ -49,10 +49,10 @@ export default new KamiCommand({
 
     const playback = resource.metadata.length
       ? [
-        inlineCode(formatDuration(resource.playbackDuration)),
-        progress((resource.playbackDuration / resource.metadata.length) * 100),
-        inlineCode(resource.metadata.getLength()),
-      ].join(' ')
+          inlineCode(formatDuration(resource.playbackDuration)),
+          progress((resource.playbackDuration / resource.metadata.length) * 100),
+          inlineCode(resource.metadata.getLength()),
+        ].join(' ')
       : 'LIVE';
 
     embed

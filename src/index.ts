@@ -3,9 +3,10 @@ import 'dotenv/config';
 import { generateDependencyReport } from '@discordjs/voice';
 
 import { KamiClient } from '@/core/client';
-import Logger from '@/utils/logger';
 import { env } from '@/env';
 import { setConsoleTitle } from '@/utils/console';
+
+import Logger from '@/utils/logger';
 
 Logger.debug(generateDependencyReport());
 

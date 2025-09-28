@@ -1,7 +1,8 @@
 import { parse, toSeconds } from 'iso8601-duration';
 
-import type { APIThumbnail, Thumbnail } from './thumbnail';
 import type { Duration } from 'iso8601-duration';
+
+import type { APIThumbnail, Thumbnail } from './thumbnail';
 
 export interface APIVideo {
   kind: 'youtube#video';

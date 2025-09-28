@@ -1,15 +1,17 @@
 import { ButtonInteraction, Colors, ComponentType, InteractionResponse, Message, MessageContextMenuCommandInteraction, StringSelectMenuInteraction, bold, hyperlink } from 'discord.js';
-import { type InferSelectModel } from 'drizzle-orm';
 import { eq } from 'drizzle-orm';
 
 import { createConfirmationButtons, createPlaylistSelector } from '@/utils/components';
 import { KamiResource } from '@/core/resource';
-import Logger from '@/utils/logger';
 import { addToPlaylist } from '@/utils/playlist';
 import { createPlaylistEmbed } from '@/utils/embeds';
 import { db } from '@/database';
 import { noop } from '@/utils/callback';
 import { playlist } from '@/database/schema';
+
+import Logger from '@/utils/logger';
+
+import type { InferSelectModel } from 'drizzle-orm';
 
 type Playlist = InferSelectModel<typeof playlist>;
 type PlaylistInteraction = MessageContextMenuCommandInteraction<'cached'> | ButtonInteraction<'cached'> | StringSelectMenuInteraction<'cached'>;

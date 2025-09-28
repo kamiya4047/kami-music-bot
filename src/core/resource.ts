@@ -4,10 +4,12 @@ import { join } from 'node:path';
 import { cleanupTitle, formatDuration, getMetadata } from '@/utils/resource';
 
 import type { GuildMember } from 'discord.js';
-import type { KamiClient } from './client';
-import type { RubyText } from '@/utils/string';
 import type { Track } from 'scdl-core';
+
+import type { RubyText } from '@/utils/string';
 import type { Video } from '@/api/youtube/video';
+
+import type { KamiClient } from './client';
 
 export interface KamiLyric {
   from: number;

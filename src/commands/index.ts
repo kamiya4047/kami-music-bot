@@ -1,15 +1,15 @@
-import add from '&/add';
-import clear from '&/clear';
-import connect from '&/connect';
-import current from '&/current';
-import jump from '&/jump';
-import lock from '&/lock';
-import next from '&/next';
-import playlist from '&/playlist';
-import prev from '&/prev';
-import queue from '&/queue';
-import remove from '&/remove';
-import repeat from '&/repeat';
+import add from '@/commands/add';
+import clear from '@/commands/clear';
+import connect from '@/commands/connect';
+import current from '@/commands/current';
+import jump from '@/commands/jump';
+import lock from '@/commands/lock';
+import next from '@/commands/next';
+import playlist from '@/commands/playlist';
+import prev from '@/commands/prev';
+import queue from '@/commands/queue';
+import remove from '@/commands/remove';
+import repeat from '@/commands/repeat';
 
 import type { KamiCommand } from '@/core/command';
 

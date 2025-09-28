@@ -7,6 +7,7 @@ import { Colors, EmbedBuilder, MessageFlags, SlashCommandAttachmentOption, Slash
 import { KamiResource, Platform } from '@/core/resource';
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiSubcommand } from '@/core/command';
+
 import Logger from '@/utils/logger';
 
 const fileOption = new SlashCommandAttachmentOption()

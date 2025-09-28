@@ -2,11 +2,12 @@ import { ApplicationCommandType, ContextMenuCommandBuilder, MessageContextMenuCo
 
 import { KamiContext } from '@/core/context';
 import { KamiResource } from '@/core/resource';
-import Logger from '@/utils/logger';
 import { PlaylistService } from '@/services/playlist';
 import { ResourceResolver } from '@/services/resource';
 import { createErrorEmbed } from '@/utils/embeds';
 import { deferEphemeral } from '@/utils/callback';
+
+import Logger from '@/utils/logger';
 
 export default new KamiContext({
   builder: new ContextMenuCommandBuilder()

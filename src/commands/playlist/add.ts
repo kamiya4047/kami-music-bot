@@ -5,11 +5,15 @@ import { KamiSubcommand } from '@/core/command';
 import { Platform } from '@/core/resource';
 import { db } from '@/database';
 import { deferEphemeral } from '@/utils/callback';
-import { playlist as playlistTable } from '@/database/schema/playlist';
 import { user } from '@/utils/embeds';
+
+import Logger from '@/utils/logger';
+
+import * as schema from '@/database/schema';
 
 import type { ChatInputCommandInteraction } from 'discord.js';
 import type { InferSelectModel } from 'drizzle-orm';
+
 import type { KamiResource } from '@/core/resource';
 
 const nameOption = new SlashCommandStringOption()
@@ -24,16 +28,16 @@ const nameOption = new SlashCommandStringOption()
 
 const addToPlaylist = async (
   interaction: ButtonInteraction<'cached'> | ChatInputCommandInteraction<'cached'>,
-  playlist: InferSelectModel<typeof playlistTable>,
+  playlist: InferSelectModel<typeof schema.playlist>,
   resource: KamiResource,
 ) => {
   try {
     await db
-      .update(playlistTable)
+      .update(schema.playlist)
       .set({
         resources: [...playlist.resources, `${resource.id}@${resource.type}`],
       })
-      .where(eq(playlistTable.id, playlist.id));
+      .where(eq(schema.playlist.id, playlist.id));
 
     const embed = new EmbedBuilder()
       .setColor(Colors.Green)
@@ -58,6 +62,8 @@ const addToPlaylist = async (
     }
   }
   catch (error) {
+    Logger.error('addToPlaylist', error);
+
     const embed = new EmbedBuilder()
       .setColor(Colors.Red)
       .setAuthor({
@@ -208,11 +214,15 @@ export default new KamiSubcommand({
           }
         }
         catch (error) {
+          Logger.error('addToPlaylist', error);
+
           await interaction.deleteReply();
         }
       }
     }
     catch (error) {
+      Logger.error('addToPlaylist', error);
+
       const embed = user(interaction)
         .error('❌ 加入播放清單失敗，請稍後再試')
         .embed;

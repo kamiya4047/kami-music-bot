@@ -1,7 +1,8 @@
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, StringSelectMenuBuilder } from 'discord.js';
-import { type InferSelectModel } from 'drizzle-orm';
 
 import { playlist } from '@/database/schema';
+
+import type { InferSelectModel } from 'drizzle-orm';
 
 type Playlist = InferSelectModel<typeof playlist>;
 

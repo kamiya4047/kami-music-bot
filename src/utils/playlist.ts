@@ -1,29 +1,33 @@
 import { ButtonInteraction, ChatInputCommandInteraction, MessageContextMenuCommandInteraction, StringSelectMenuInteraction, bold, hyperlink } from 'discord.js';
-import { type InferSelectModel, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 
 import { db } from '@/database';
-import { playlist as playlistTable } from '@/database/schema/playlist';
 
 import { createErrorEmbed, createPlaylistEmbed } from './embeds';
+
 import Logger from './logger';
+
+import * as schema from '@/database/schema';
+
+import type { InferSelectModel } from 'drizzle-orm';
 
 import type { KamiResource } from '@/core/resource';
 
 export const addToPlaylist = async (
   interaction: ButtonInteraction<'cached'> | ChatInputCommandInteraction<'cached'> | MessageContextMenuCommandInteraction<'cached'> | StringSelectMenuInteraction<'cached'>,
-  playlist: InferSelectModel<typeof playlistTable>,
+  playlist: InferSelectModel<typeof schema.playlist>,
   resources: KamiResource[],
 ) => {
   try {
     await db
-      .update(playlistTable)
+      .update(schema.playlist)
       .set({
         resources: [
           ...playlist.resources,
           ...resources.map((r) => `${r.id}@${r.type}`),
         ],
       })
-      .where(eq(playlistTable.id, playlist.id));
+      .where(eq(schema.playlist.id, playlist.id));
 
     const embed = createPlaylistEmbed({
       user: interaction.member,

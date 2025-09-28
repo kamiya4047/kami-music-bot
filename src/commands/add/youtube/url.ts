@@ -1,8 +1,8 @@
 import { Colors, EmbedBuilder, MessageFlags, SlashCommandIntegerOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, hyperlink, unorderedList } from 'discord.js';
 import { eq } from 'drizzle-orm';
 
-import { KamiResource, Platform } from '@/core/resource';
 import { fetchPlaylist, fetchVideo, parseUrl } from '@/api/youtube';
+import { KamiResource, Platform } from '@/core/resource';
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiSubcommand } from '@/core/command';
 import { db } from '@/database';

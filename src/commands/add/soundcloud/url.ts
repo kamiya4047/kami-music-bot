@@ -1,6 +1,6 @@
 import { Colors, EmbedBuilder, MessageFlags, SlashCommandIntegerOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, hyperlink } from 'discord.js';
-import { eq } from 'drizzle-orm';
 import { SoundCloud as sc } from 'scdl-core';
+import { eq } from 'drizzle-orm';
 
 import { KamiResource, Platform } from '@/core/resource';
 import { KamiMusicPlayer } from '@/core/player';

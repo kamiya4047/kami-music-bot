@@ -2,8 +2,9 @@ import { SoundCloud as sc } from 'scdl-core';
 
 import { fetchVideo, parseUrl } from '@/api/youtube';
 import { KamiResource } from '@/core/resource';
-import Logger from '@/utils/logger';
 import { tryCatch } from '@/utils/tryCatch';
+
+import Logger from '@/utils/logger';
 
 import type { KamiClient } from '@/core/client';
 

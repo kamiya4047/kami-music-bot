@@ -4,11 +4,12 @@ import { eq, inArray } from 'drizzle-orm';
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiResource } from '@/core/resource';
 import { KamiSubcommand } from '@/core/command';
-import Logger from '@/utils/logger';
 import { db } from '@/database';
 import { deferEphemeral } from '@/utils/callback';
-import { playlist } from '@/database/schema';
-import { resource } from '@/database/schema/resource';
+
+import Logger from '@/utils/logger';
+
+import * as schema from '@/database/schema';
 
 const nameOption = new SlashCommandStringOption()
   .setName('name')
@@ -129,7 +130,7 @@ export default new KamiSubcommand({
 
       // Get the resources
       const resources = (await db.query.resource.findMany({
-        where: inArray(resource.resourceId, playlistData.resources),
+        where: inArray(schema.resource.resourceId, playlistData.resources),
       })).map((r) => new KamiResource(this, r));
 
       if (resources.length === 0) {
@@ -200,7 +201,7 @@ export default new KamiSubcommand({
     const focusedValue = interaction.options.getFocused();
 
     const userPlaylists = await db.query.playlist.findMany({
-      where: eq(playlist.ownerId, userId),
+      where: eq(schema.playlist.ownerId, userId),
       columns: {
         name: true,
       },

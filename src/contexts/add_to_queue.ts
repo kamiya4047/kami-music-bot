@@ -3,9 +3,10 @@ import { ApplicationCommandType, Colors, ContextMenuCommandBuilder, EmbedBuilder
 import { KamiContext } from '@/core/context';
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiResource } from '@/core/resource';
-import Logger from '@/utils/logger';
 import { ResourceResolver } from '@/services/resource';
 import { deferEphemeral } from '@/utils/callback';
+
+import Logger from '@/utils/logger';
 
 export default new KamiContext({
   builder: new ContextMenuCommandBuilder()

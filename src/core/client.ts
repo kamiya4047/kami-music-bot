@@ -4,16 +4,18 @@ import { createHash } from 'node:crypto';
 
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
 
-import Logger from '@/utils/logger';
 import { ResourceResolver } from '@/services/resource';
-import commands from '&';
-import contextMenus from '$';
 import { env } from '@/env';
-import events from '#';
-import pkg from '~/package.json';
 import { safeWriteFileSync } from '@/utils/fs';
 
+import Logger from '@/utils/logger';
+import commands from '@/commands';
+import contextMenus from '@/contexts';
+import events from '@/events';
+import pkg from '~/package.json';
+
 import type { ClientOptions } from 'discord.js';
+
 import type { KamiCommand } from '@/core/command';
 import type { KamiContext } from '@/core/context';
 import type { KamiMusicPlayer } from '@/core/player';

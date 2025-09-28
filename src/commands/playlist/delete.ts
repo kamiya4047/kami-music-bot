@@ -3,10 +3,11 @@ import { and, eq } from 'drizzle-orm';
 
 import { deferEphemeral, noop } from '@/utils/callback';
 import { KamiSubcommand } from '@/core/command';
-import Logger from '@/utils/logger';
 import { db } from '@/database';
 import { playlist } from '@/database/schema';
 import { user } from '@/utils/embeds';
+
+import Logger from '@/utils/logger';
 
 export default new KamiSubcommand({
   builder: new SlashCommandSubcommandBuilder()

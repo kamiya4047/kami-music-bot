@@ -1,10 +1,12 @@
 import { Collection, Colors, EmbedBuilder, MessageFlags, SlashCommandIntegerOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, hyperlink } from 'discord.js';
-import { type SearchResponse, SoundCloud, type Track } from 'scdl-core';
+import { SoundCloud } from 'scdl-core';
 
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiResource } from '@/core/resource';
 import { KamiSubcommand } from '@/core/command';
 import { logError } from '@/utils/callback';
+
+import type { SearchResponse, Track } from 'scdl-core';
 
 const inputOption = new SlashCommandStringOption()
   .setName('track')

@@ -1,4 +1,5 @@
 import type { Awaitable, ClientEvents } from 'discord.js';
+
 import type { KamiClient } from '@/core/client';
 
 type Events = keyof ClientEvents;

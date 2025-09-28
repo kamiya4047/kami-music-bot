@@ -5,19 +5,22 @@ import { pipeline } from 'node:stream';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, MessageFlags, inlineCode } from 'discord.js';
 import { AudioPlayerStatus, StreamType, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel } from '@discordjs/voice';
 import { SoundCloud } from 'scdl-core';
+
 import prism from 'prism-media';
 import ytdl from 'youtube-dl-exec';
 
 import { formatDuration, getLyricsAtTime, progress } from '@/utils/resource';
-import Logger from '@/utils/logger';
 import { Platform } from '@/core/resource';
 import { db } from '@/database';
 import { formatLines } from '@/utils/string';
 import { logError } from '@/utils/callback';
 import { resource as resourceTable } from '@/database/schema';
 
-import type { AudioPlayer, AudioResource, PlayerSubscription, VoiceConnection } from '@discordjs/voice';
+import Logger from '@/utils/logger';
+
 import type { DiscordAPIError, Guild, GuildMember, GuildTextBasedChannel, Message, VoiceBasedChannel } from 'discord.js';
+import type { AudioPlayer, AudioResource, PlayerSubscription, VoiceConnection } from '@discordjs/voice';
+
 import type { KamiLyric, KamiResource } from '@/core/resource';
 import type { KamiClient } from '@/core/client';
 
@@ -32,14 +35,14 @@ const PlayerControls = (player: KamiMusicPlayer, status?: AudioPlayerStatus) => 
       .setStyle(ButtonStyle.Secondary),
     status == AudioPlayerStatus.Paused
       ? new ButtonBuilder()
-        .setCustomId('player:control-resume')
-        .setEmoji('▶️')
-        .setStyle(ButtonStyle.Secondary)
+          .setCustomId('player:control-resume')
+          .setEmoji('▶️')
+          .setStyle(ButtonStyle.Secondary)
       : new ButtonBuilder()
-        .setCustomId('player:control-pause')
-        .setEmoji('⏸️')
-        .setDisabled(!player.currentResource)
-        .setStyle(ButtonStyle.Secondary),
+          .setCustomId('player:control-pause')
+          .setEmoji('⏸️')
+          .setDisabled(!player.currentResource)
+          .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('player:control-next')
       .setEmoji('⏭️')
@@ -312,7 +315,6 @@ export class KamiMusicPlayer {
       // "-af", `firequalizer=gain_entry='${Object.keys(this.equalizer).map(k => `entry(${k},${this.equalizer[k]})`).join(";")}',dynaudnorm=n=0:c=1`,
       // "-af", `bass=g=${this.audiofilter.bass}`,
     ];
-    // eslint-disable-next-line import-x/no-named-as-default-member
     this._transcoder = new prism.FFmpeg({ args: transcoderArgs });
 
     const audioResource = createAudioResource(
@@ -350,7 +352,6 @@ export class KamiMusicPlayer {
       const stream = await (async () => {
         switch (resource.type) {
           case Platform.YouTube:
-            // eslint-disable-next-line import-x/no-named-as-default-member
             return ytdl.exec(resource.url, {
               noCheckCertificates: true,
               noWarnings: true,
@@ -668,10 +669,10 @@ export class KamiMusicPlayer {
       if (resource.metadata && this.currentResource) {
         const playback = resource.length
           ? [
-            inlineCode(formatDuration(this.currentResource.playbackDuration)),
-            progress((this.currentResource.playbackDuration / resource.length) * 100),
-            inlineCode(resource.getLength()),
-          ].join(' ')
+              inlineCode(formatDuration(this.currentResource.playbackDuration)),
+              progress((this.currentResource.playbackDuration / resource.length) * 100),
+              inlineCode(resource.getLength()),
+            ].join(' ')
           : 'LIVE';
 
         embed.setDescription(playback)
