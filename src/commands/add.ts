@@ -16,16 +16,14 @@ export default new KamiCommand({
     .setDescription('Add resource to the queue')
     .setDescriptionLocalization('ja', 'キューにリソースを追加する')
     .setDescriptionLocalization('zh-TW', '新增資源到播放器的播放佇列'),
-  groups: [youtube, soundcloud],
-  subcommands: [file, playlist],
   execute(interaction) {
     const group = interaction.options.getSubcommandGroup();
     switch (group) {
-      case Platform.YouTube:
-        youtube.execute(this, interaction);
-        return;
       case Platform.SoundCloud:
         soundcloud.execute(this, interaction);
+        return;
+      case Platform.YouTube:
+        youtube.execute(this, interaction);
         return;
     }
     const subcommand = interaction.options.getSubcommand();
@@ -38,14 +36,15 @@ export default new KamiCommand({
         return;
     }
   },
+  groups: [youtube, soundcloud],
   onAutocomplete(interaction) {
     const group = interaction.options.getSubcommandGroup();
     switch (group) {
-      case Platform.YouTube:
-        youtube.onAutocomplete(this, interaction);
-        return;
       case Platform.SoundCloud:
         soundcloud.onAutocomplete(this, interaction);
+        return;
+      case Platform.YouTube:
+        youtube.onAutocomplete(this, interaction);
         return;
     }
     const subcommand = interaction.options.getSubcommand();
@@ -55,4 +54,5 @@ export default new KamiCommand({
         return;
     }
   },
+  subcommands: [file, playlist],
 });

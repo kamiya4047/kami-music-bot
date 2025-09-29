@@ -22,8 +22,8 @@ export default new KamiCommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `加入語音 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL() ?? undefined,
+        name: `加入語音 | ${interaction.guild.name}`,
       });
 
     if (!voice || !text) {

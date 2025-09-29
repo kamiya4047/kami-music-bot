@@ -1,8 +1,8 @@
-import onAutocomplete from '#/client/onAutocomplete';
-import onCommand from '#/client/onCommand';
-import onContextMenu from '#/client/onContextMenu';
-import player from '#/client/player';
-import ready from '#/client/ready';
+import onAutocomplete from '@/events/client/onAutocomplete';
+import onCommand from '@/events/client/onCommand';
+import onContextMenu from '@/events/client/onContextMenu';
+import player from '@/events/client/player';
+import ready from '@/events/client/ready';
 
 import type { EventHandler } from '@/core/event';
 

@@ -2,76 +2,77 @@ import type { APIThumbnail, Thumbnail } from './thumbnail';
 import type { Video } from './video';
 
 export interface APIPlaylist {
-  kind: 'youtube#playlist';
   etag: string;
   id: string;
+  kind: 'youtube#playlist';
   snippet: {
-    publishedAt: string;
     channelId: string;
-    title: string;
-    description: string;
-    thumbnails: {
-      default: APIThumbnail;
-      medium: APIThumbnail;
-      high: APIThumbnail;
-      standard?: APIThumbnail;
-      maxres?: APIThumbnail;
-    };
     channelTitle: string;
     defaultLanguage: string;
+    description: string;
     localized: {
-      title: string;
       description: string;
+      title: string;
     };
+    publishedAt: string;
+    thumbnails: {
+      default: APIThumbnail;
+      high: APIThumbnail;
+      maxres?: APIThumbnail;
+      medium: APIThumbnail;
+      standard?: APIThumbnail;
+    };
+    title: string;
   };
 }
 
 export interface APIPlaylistItem {
-  kind: 'youtube#playlistItem';
+  contentDetails: {
+    endAt: string;
+    note: string;
+    startAt: string;
+    videoId: string;
+    videoPublishedAt: string;
+  };
   etag: string;
   id: string;
+  kind: 'youtube#playlistItem';
   snippet: {
-    publishedAt: string;
     channelId: string;
-    title: string;
-    description: string;
-    thumbnails: {
-      default: APIThumbnail;
-      medium: APIThumbnail;
-      high: APIThumbnail;
-      standard?: APIThumbnail;
-      maxres?: APIThumbnail;
-    };
     channelTitle: string;
-    videoOwnerChannelTitle: string;
-    videoOwnerChannelId: string;
+    description: string;
     playlistId: string;
     position: number;
+    publishedAt: string;
     resourceId: {
       kind: string;
       videoId: string;
     };
-  };
-  contentDetails: {
-    videoId: string;
-    startAt: string;
-    endAt: string;
-    note: string;
-    videoPublishedAt: string;
+    thumbnails: {
+      default: APIThumbnail;
+      high: APIThumbnail;
+      maxres?: APIThumbnail;
+      medium: APIThumbnail;
+      standard?: APIThumbnail;
+    };
+    title: string;
+    videoOwnerChannelId: string;
+    videoOwnerChannelTitle: string;
   };
 }
 
 export class Playlist {
-  id: string;
-  title: string;
-  thumbnail: Thumbnail;
   channel: {
     id: string;
     title: string;
   };
 
-  videos: Video[];
+  id: string;
+  thumbnail: Thumbnail;
+  title: string;
+
   url: string;
+  videos: Video[];
 
   constructor(data: APIPlaylist, videos: Video[]) {
     this.id = data.id;

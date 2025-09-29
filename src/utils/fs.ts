@@ -3,7 +3,7 @@ import { dirname } from 'node:path';
 
 import type { WriteFileOptions } from 'node:fs';
 
-export const safeWriteFileSync = (path: string, data: string | NodeJS.ArrayBufferView, options?: WriteFileOptions) => {
+export const safeWriteFileSync = (path: string, data: NodeJS.ArrayBufferView | string, options?: WriteFileOptions) => {
   if (!existsSync(path)) {
     mkdirSync(dirname(path), { recursive: true });
   }

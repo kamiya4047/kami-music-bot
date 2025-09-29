@@ -5,11 +5,15 @@ import { KamiSubcommand } from '@/core/command';
 import { Platform } from '@/core/resource';
 import { db } from '@/database';
 import { deferEphemeral } from '@/utils/callback';
-import { playlist as playlistTable } from '@/database/schema/playlist';
 import { user } from '@/utils/embeds';
+
+import Logger from '@/utils/logger';
+
+import * as schema from '@/database/schema';
 
 import type { ChatInputCommandInteraction } from 'discord.js';
 import type { InferSelectModel } from 'drizzle-orm';
+
 import type { KamiResource } from '@/core/resource';
 
 const nameOption = new SlashCommandStringOption()
@@ -24,22 +28,22 @@ const nameOption = new SlashCommandStringOption()
 
 const addToPlaylist = async (
   interaction: ButtonInteraction<'cached'> | ChatInputCommandInteraction<'cached'>,
-  playlist: InferSelectModel<typeof playlistTable>,
+  playlist: InferSelectModel<typeof schema.playlist>,
   resource: KamiResource,
 ) => {
   try {
     await db
-      .update(playlistTable)
+      .update(schema.playlist)
       .set({
         resources: [...playlist.resources, `${resource.id}@${resource.type}`],
       })
-      .where(eq(playlistTable.id, playlist.id));
+      .where(eq(schema.playlist.id, playlist.id));
 
     const embed = new EmbedBuilder()
       .setColor(Colors.Green)
       .setAuthor({
-        name: `播放清單 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL() ?? undefined,
+        name: `播放清單 | ${interaction.guild.name}`,
       })
       .setDescription(`✅ 已將 "${resource.title}" 加入播放清單 "${playlist.name}"`)
       .setThumbnail(resource.thumbnail)
@@ -47,8 +51,8 @@ const addToPlaylist = async (
 
     if ('update' in interaction) {
       await interaction.update({
-        embeds: [embed],
         components: [],
+        embeds: [embed],
       });
     }
     else {
@@ -58,19 +62,21 @@ const addToPlaylist = async (
     }
   }
   catch (error) {
+    Logger.error('addToPlaylist', error);
+
     const embed = new EmbedBuilder()
       .setColor(Colors.Red)
       .setAuthor({
-        name: `播放清單 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL() ?? undefined,
+        name: `播放清單 | ${interaction.guild.name}`,
       })
       .setDescription('❌ 加入播放清單失敗，請稍後再試')
       .setTimestamp();
 
     if ('update' in interaction) {
       await interaction.update({
-        embeds: [embed],
         components: [],
+        embeds: [embed],
       });
     }
     else {
@@ -90,28 +96,6 @@ export default new KamiSubcommand({
     .setDescriptionLocalization('ja', '現在再生中の曲をプレイリストに追加する')
     .setDescriptionLocalization('zh-TW', '將目前播放中的歌曲加入到播放清單')
     .addStringOption(nameOption),
-  async onAutocomplete(interaction: AutocompleteInteraction<'cached'>) {
-    const focusedValue = interaction.options.getFocused().toString();
-
-    const playlists = await db.query.playlist.findMany({
-      where: (playlist, { and, like }) => and(
-        eq(playlist.ownerId, interaction.user.id),
-        like(playlist.name, `%${focusedValue}%`),
-      ),
-      columns: {
-        name: true,
-      },
-    });
-
-    await interaction.respond(
-      playlists
-        .map((playlist) => ({
-          name: playlist.name,
-          value: playlist.name,
-        }))
-        .slice(0, 25),
-    );
-  },
   async execute(interaction) {
     await deferEphemeral(interaction);
 
@@ -180,23 +164,23 @@ export default new KamiSubcommand({
         const embed = new EmbedBuilder()
           .setColor(Colors.Yellow)
           .setAuthor({
-            name: `播放清單 | ${interaction.guild.name}`,
             iconURL: interaction.guild.iconURL() ?? undefined,
+            name: `播放清單 | ${interaction.guild.name}`,
           })
           .setDescription(`⚠️ "${player.currentResource.metadata.title}" 已經在播放清單 "${name}" 中`)
           .setThumbnail(player.currentResource.metadata.thumbnail)
           .setTimestamp();
 
         const response = await interaction.editReply({
-          embeds: [embed],
           components: [row],
+          embeds: [embed],
         });
 
         try {
           const confirmation = await response.awaitMessageComponent({
+            componentType: ComponentType.Button,
             filter: (i) => i.user.id === interaction.user.id,
             time: 60_000,
-            componentType: ComponentType.Button,
           });
 
           if (confirmation.customId === 'add_anyway') {
@@ -208,11 +192,15 @@ export default new KamiSubcommand({
           }
         }
         catch (error) {
+          Logger.error('addToPlaylist', error);
+
           await interaction.deleteReply();
         }
       }
     }
     catch (error) {
+      Logger.error('addToPlaylist', error);
+
       const embed = user(interaction)
         .error('❌ 加入播放清單失敗，請稍後再試')
         .embed;
@@ -221,5 +209,27 @@ export default new KamiSubcommand({
         embeds: [embed],
       });
     }
+  },
+  async onAutocomplete(interaction: AutocompleteInteraction<'cached'>) {
+    const focusedValue = interaction.options.getFocused().toString();
+
+    const playlists = await db.query.playlist.findMany({
+      columns: {
+        name: true,
+      },
+      where: (playlist, { and, like }) => and(
+        eq(playlist.ownerId, interaction.user.id),
+        like(playlist.name, `%${focusedValue}%`),
+      ),
+    });
+
+    await interaction.respond(
+      playlists
+        .map((playlist) => ({
+          name: playlist.name,
+          value: playlist.name,
+        }))
+        .slice(0, 25),
+    );
   },
 });

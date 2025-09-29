@@ -3,9 +3,10 @@ import { ApplicationCommandType, Colors, ContextMenuCommandBuilder, EmbedBuilder
 import { KamiContext } from '@/core/context';
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiResource } from '@/core/resource';
-import Logger from '@/utils/logger';
 import { ResourceResolver } from '@/services/resource';
 import { deferEphemeral } from '@/utils/callback';
+
+import Logger from '@/utils/logger';
 
 export default new KamiContext({
   builder: new ContextMenuCommandBuilder()
@@ -25,8 +26,8 @@ export default new KamiContext({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({

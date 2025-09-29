@@ -1,10 +1,12 @@
 import { Collection, Colors, EmbedBuilder, MessageFlags, SlashCommandIntegerOption, SlashCommandStringOption, SlashCommandSubcommandBuilder, hyperlink } from 'discord.js';
-import { type SearchResponse, SoundCloud, type Track } from 'scdl-core';
+import { SoundCloud } from 'scdl-core';
 
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiResource } from '@/core/resource';
 import { KamiSubcommand } from '@/core/command';
 import { logError } from '@/utils/callback';
+
+import type { SearchResponse, Track } from 'scdl-core';
 
 const inputOption = new SlashCommandStringOption()
   .setName('track')
@@ -49,8 +51,8 @@ export default new KamiSubcommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -140,7 +142,7 @@ export default new KamiSubcommand({
     }
 
     const respond = async () => {
-      const result = await SoundCloud.search({ query: keyword, filter: 'tracks' }).catch(logError) as void | SearchResponse<Track>;
+      const result = await SoundCloud.search({ filter: 'tracks', query: keyword }).catch(logError) as SearchResponse<Track> | void;
 
       if (!result) {
         await interaction.respond([]).catch(logError);

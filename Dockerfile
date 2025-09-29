@@ -1,17 +1,16 @@
-FROM node:20-alpine
+FROM oven/bun:1-alpine
 
 RUN apk add --no-cache python3 make g++
 
 WORKDIR /usr/src/bot
 
-COPY package*.json ./
-
-RUN npm ci
-
 COPY . .
+
+RUN bun install --frozen-lockfile
 
 ENV NODE_ENV=production
 
-RUN npm run build
+RUN bun run build
 
-CMD ["node", "./dist/index.js"]
+USER bun
+CMD ["bun", "run", "./dist/index.js"]

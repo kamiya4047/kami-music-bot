@@ -60,8 +60,8 @@ export default new KamiCommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `循環模式 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL() ?? undefined,
+        name: `循環模式 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({

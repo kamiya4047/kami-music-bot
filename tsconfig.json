@@ -14,26 +14,7 @@
     "moduleResolution": "bundler",
     "verbatimModuleSyntax": true,
     "outDir": "dist",
-    "rootDir": "src",
     "paths": {
-      "#": [
-        "./src/events"
-      ],
-      "#/*": [
-        "./src/events/*"
-      ],
-      "&": [
-        "./src/commands"
-      ],
-      "&/*": [
-        "./src/commands/*"
-      ],
-      "$": [
-        "./src/contexts"
-      ],
-      "$/*": [
-        "./src/contexts/*"
-      ],
       "@/*": [
         "./src/*"
       ],
@@ -56,6 +37,8 @@
   "include": [
     "./src/**/*",
     "./tools/**/*",
-    "drizzle.config.ts"
+    "drizzle.config.ts",
+    "eslint.config.ts",
+    "rollup.config.mjs",
   ]
 }

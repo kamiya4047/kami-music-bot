@@ -3,12 +3,14 @@ import { nanoid } from 'nanoid';
 
 import { KamiResource, Platform } from '@/core/resource';
 import { KamiSubcommand } from '@/core/command';
-import Logger from '@/utils/logger';
 import { db } from '@/database';
 import { deferEphemeral } from '@/utils/callback';
 import { getQueue } from '@/core/queue';
-import { playlist } from '@/database/schema/playlist';
 import { user } from '@/utils/embeds';
+
+import Logger from '@/utils/logger';
+
+import * as schema from '@/database/schema';
 
 export default new KamiSubcommand({
   builder: new SlashCommandSubcommandBuilder()
@@ -83,11 +85,11 @@ export default new KamiSubcommand({
 
     try {
       const id = nanoid();
-      await db.insert(playlist).values({
+      await db.insert(schema.playlist).values({
         id,
         name,
-        resources,
         ownerId: interaction.user.id,
+        resources,
       });
 
       const successEmbed = user(interaction)

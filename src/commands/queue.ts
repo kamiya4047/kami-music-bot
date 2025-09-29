@@ -23,8 +23,8 @@ export default new KamiCommand({
       const embed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setAuthor({
-          name: `播放佇列 | ${interaction.guild.name}`,
           iconURL: interaction.guild.iconURL() ?? undefined,
+          name: `播放佇列 | ${interaction.guild.name}`,
         })
         .setDescription('❌ 目前沒有在播放音樂');
 
@@ -35,26 +35,24 @@ export default new KamiCommand({
     }
 
     const paginationManager = new PaginationManager({
-      items: player.queue,
-      itemsPerPage: 10,
       customId: `queue_${interaction.guild.id}`,
       embedBuilder: (items, currentPage, totalPages) => {
         const embed = new EmbedBuilder()
           .setColor(Colors.Blue)
           .setAuthor({
-            name: `播放佇列 | ${interaction.guild.name}`,
             iconURL: interaction.guild.iconURL()!,
+            name: `播放佇列 | ${interaction.guild.name}`,
           })
           .setDescription(
             items.length > 0
               ? items.map((resource, i) => {
-                const index = (currentPage - 1) * 10 + i;
-                const item = hyperlink(resource.title.slice(0, 40), resource.url);
-                if (index === player.currentIndex && player.isPlaying) {
-                  return `${index + 1}. 🎵 ${item}`;
-                }
-                return `${index + 1}. ${item}`;
-              }).join('\n')
+                  const index = (currentPage - 1) * 10 + i;
+                  const item = hyperlink(resource.title.slice(0, 40), resource.url);
+                  if (index === player.currentIndex && player.isPlaying) {
+                    return `${index + 1}. 🎵 ${item}`;
+                  }
+                  return `${index + 1}. ${item}`;
+                }).join('\n')
               : '目前沒有任何項目，使用 `/add` 來新增項目',
           )
           .setFooter({
@@ -62,6 +60,8 @@ export default new KamiCommand({
           });
         return embed;
       },
+      items: player.queue,
+      itemsPerPage: 10,
     });
 
     const reply = paginationManager.createReply();

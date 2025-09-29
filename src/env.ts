@@ -3,33 +3,33 @@ import 'dotenv/config';
 import { type } from 'arktype';
 
 const schema = type({
-  NODE_ENV: '"development" | "production"',
-  KAMI_TOKEN: 'string',
-  DEV_TOKEN: 'string',
-  YOUTUBE_TOKEN: 'string',
-  LASTFM_TOKEN: 'string',
-  LASTFM_SECRET: 'string',
-  GENIUS_SECRET: 'string',
-  DATABASE_URL: 'string',
-  WEBHOOK_URL: 'string',
   BOT_VERSION: 'string',
-  DEV_GUILD_ID: 'string',
   CACHE_FOLDER: 'string',
+  DATABASE_URL: 'string',
+  DEV_GUILD_ID: 'string',
+  DEV_TOKEN: 'string',
+  GENIUS_SECRET: 'string',
+  KAMI_TOKEN: 'string',
+  LASTFM_SECRET: 'string',
+  LASTFM_TOKEN: 'string',
+  NODE_ENV: '"development" | "production"',
+  WEBHOOK_URL: 'string',
+  YOUTUBE_TOKEN: 'string',
 });
 
 const result = schema({
-  NODE_ENV: process.env['NODE_ENV'] ?? 'development',
-  KAMI_TOKEN: process.env['KAMI_TOKEN'],
-  DEV_TOKEN: process.env['DEV_TOKEN'],
-  YOUTUBE_TOKEN: process.env['YOUTUBE_TOKEN'],
-  LASTFM_TOKEN: process.env['LASTFM_TOKEN'],
-  LASTFM_SECRET: process.env['LASTFM_SECRET'],
-  GENIUS_SECRET: process.env['GENIUS_SECRET'],
-  DATABASE_URL: process.env['DATABASE_URL'],
-  WEBHOOK_URL: process.env['WEBHOOK_URL'],
   BOT_VERSION: process.env['BOT_VERSION'],
-  DEV_GUILD_ID: process.env['DEV_GUILD_ID'],
   CACHE_FOLDER: process.env['CACHE_FOLDER'] ?? '.cache',
+  DATABASE_URL: process.env['DATABASE_URL'],
+  DEV_GUILD_ID: process.env['DEV_GUILD_ID'],
+  DEV_TOKEN: process.env['DEV_TOKEN'],
+  GENIUS_SECRET: process.env['GENIUS_SECRET'],
+  KAMI_TOKEN: process.env['KAMI_TOKEN'],
+  LASTFM_SECRET: process.env['LASTFM_SECRET'],
+  LASTFM_TOKEN: process.env['LASTFM_TOKEN'],
+  NODE_ENV: process.env['NODE_ENV'] ?? 'development',
+  WEBHOOK_URL: process.env['WEBHOOK_URL'],
+  YOUTUBE_TOKEN: process.env['YOUTUBE_TOKEN'],
 });
 
 if (result instanceof type.errors) {

@@ -2,12 +2,13 @@ import { SlashCommandSubcommandBuilder, TimestampStyles, bold, inlineCode, time,
 import { eq } from 'drizzle-orm';
 
 import { KamiSubcommand } from '@/core/command';
-import Logger from '@/utils/logger';
 import { db } from '@/database';
 import { deferEphemeral } from '@/utils/callback';
 import { getCommandId } from '@/utils/client';
 import { playlist } from '@/database/schema';
 import { user } from '@/utils/embeds';
+
+import Logger from '@/utils/logger';
 
 export default new KamiSubcommand({
   builder: new SlashCommandSubcommandBuilder()

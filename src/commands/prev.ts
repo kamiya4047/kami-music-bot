@@ -16,8 +16,8 @@ export default new KamiCommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `上一個 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL() ?? undefined,
+        name: `上一個 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({

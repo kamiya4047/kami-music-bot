@@ -1,7 +1,26 @@
 import { Collection, SlashCommandBuilder, SlashCommandSubcommandGroupBuilder } from 'discord.js';
 
 import type { AnySelectMenuInteraction, AutocompleteInteraction, Awaitable, ButtonInteraction, ChatInputCommandInteraction, LocalizationMap, ModalSubmitInteraction, SharedSlashCommand, SlashCommandSubcommandBuilder } from 'discord.js';
+
 import type { KamiClient } from '@/core/client';
+
+export interface KamiCommandOptions extends KamiCommandHandlers {
+  builder: SharedSlashCommand | SlashCommandBuilder;
+  groups?: KamiSubcommandGroup[];
+  subcommands?: KamiSubcommand[];
+}
+
+export interface KamiSubcommandGroupOptions {
+  description: string;
+  descriptionLocalizations: LocalizationMap;
+  name: string;
+  nameLocalizations: LocalizationMap;
+  subcommands: KamiSubcommand[];
+}
+
+export interface KamiSubcommandOptions extends KamiCommandHandlers {
+  builder: SlashCommandSubcommandBuilder;
+}
 
 interface KamiCommandHandlers {
   execute: (this: KamiClient, interaction: ChatInputCommandInteraction<'cached'>) => Awaitable<void>;
@@ -11,33 +30,15 @@ interface KamiCommandHandlers {
   onSelectMenu?: (this: KamiClient, interaction: AnySelectMenuInteraction<'cached'>, menuId: string) => Awaitable<void>;
 }
 
-export interface KamiCommandOptions extends KamiCommandHandlers {
-  builder: SharedSlashCommand | SlashCommandBuilder;
-  groups?: KamiSubcommandGroup[];
-  subcommands?: KamiSubcommand[];
-}
-
-export interface KamiSubcommandOptions extends KamiCommandHandlers {
-  builder: SlashCommandSubcommandBuilder;
-}
-
-export interface KamiSubcommandGroupOptions {
-  name: string;
-  nameLocalizations: LocalizationMap;
-  description: string;
-  descriptionLocalizations: LocalizationMap;
-  subcommands: KamiSubcommand[];
-}
-
 export class KamiCommand {
   builder: SharedSlashCommand | SlashCommandBuilder;
   execute: (this: KamiClient, interaction: ChatInputCommandInteraction<'cached'>) => Awaitable<void>;
+  groups = new Collection<string, KamiSubcommandGroup>();
   onAutocomplete?: (this: KamiClient, interaction: AutocompleteInteraction<'cached'>) => Awaitable<void>;
   onButton?: (this: KamiClient, interaction: ButtonInteraction<'cached'>, buttonId: string) => Awaitable<void>;
   onModalSubmit?: (this: KamiClient, interaction: ModalSubmitInteraction<'cached'>, modalId: string) => Awaitable<void>;
-  onSelectMenu?: (this: KamiClient, interaction: AnySelectMenuInteraction<'cached'>, menuId: string) => Awaitable<void>;
 
-  groups = new Collection<string, KamiSubcommandGroup>();
+  onSelectMenu?: (this: KamiClient, interaction: AnySelectMenuInteraction<'cached'>, menuId: string) => Awaitable<void>;
   subcommands = new Collection<string, KamiSubcommand>();
 
   constructor(options: KamiCommandOptions) {

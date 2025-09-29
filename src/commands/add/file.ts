@@ -7,6 +7,7 @@ import { Colors, EmbedBuilder, MessageFlags, SlashCommandAttachmentOption, Slash
 import { KamiResource, Platform } from '@/core/resource';
 import { KamiMusicPlayer } from '@/core/player';
 import { KamiSubcommand } from '@/core/command';
+
 import Logger from '@/utils/logger';
 
 const fileOption = new SlashCommandAttachmentOption()
@@ -43,8 +44,8 @@ export default new KamiSubcommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -118,12 +119,12 @@ export default new KamiSubcommand({
       const resource = new KamiResource(
         this,
         {
-          type: Platform.File,
           id: fileId,
-          title: title,
           length: 0,
-          url: file.url,
           thumbnail: 'https://i.imgur.com/PBNp7QM.png',
+          title: title,
+          type: Platform.File,
+          url: file.url,
         })
         .setMember(interaction.member)
         .setCache(tempPath);

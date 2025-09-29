@@ -1,8 +1,9 @@
 import { ActivityType, Events } from 'discord.js';
 
 import { EventHandler } from '@/core/event';
-import Logger from '@/utils/logger';
 import { env } from '@/env';
+
+import Logger from '@/utils/logger';
 
 export default new EventHandler({
   event: Events.ClientReady,

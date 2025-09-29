@@ -4,16 +4,18 @@ import { createHash } from 'node:crypto';
 
 import { Client, Collection, GatewayIntentBits } from 'discord.js';
 
-import Logger from '@/utils/logger';
 import { ResourceResolver } from '@/services/resource';
-import commands from '&';
-import contextMenus from '$';
 import { env } from '@/env';
-import events from '#';
-import pkg from '~/package.json';
 import { safeWriteFileSync } from '@/utils/fs';
 
+import Logger from '@/utils/logger';
+import commands from '@/commands';
+import contextMenus from '@/contexts';
+import events from '@/events';
+import pkg from '~/package.json';
+
 import type { ClientOptions } from 'discord.js';
+
 import type { KamiCommand } from '@/core/command';
 import type { KamiContext } from '@/core/context';
 import type { KamiMusicPlayer } from '@/core/player';
@@ -23,8 +25,8 @@ export class KamiClient extends Client {
   commands = new Collection<string, KamiCommand>();
   contextMenus = new Collection<string, KamiContext>();
   players = new Collection<string, KamiMusicPlayer>();
-  version = pkg.version;
   resourceResolver: ResourceResolver;
+  version = pkg.version;
 
   constructor(options?: ClientOptions) {
     super({

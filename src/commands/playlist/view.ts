@@ -2,17 +2,18 @@ import { Colors, EmbedBuilder, SlashCommandStringOption, SlashCommandSubcommandB
 import { and, eq, inArray } from 'drizzle-orm';
 
 import { KamiSubcommand } from '@/core/command';
-import Logger from '@/utils/logger';
 import { PaginationManager } from '@/utils/pagination';
 import { db } from '@/database';
 import { deferEphemeral } from '@/utils/callback';
-import { playlist } from '@/database/schema';
-import { resource } from '@/database/schema/resource';
 import { user } from '@/utils/embeds';
+
+import Logger from '@/utils/logger';
+
+import * as schema from '@/database/schema';
 
 import type { InferSelectModel } from 'drizzle-orm';
 
-type Resource = InferSelectModel<typeof resource>;
+type Resource = InferSelectModel<typeof schema.resource>;
 
 export default new KamiSubcommand({
   builder: new SlashCommandSubcommandBuilder()
@@ -42,8 +43,8 @@ export default new KamiSubcommand({
     try {
       const playlistData = await db.query.playlist.findFirst({
         where: and(
-          eq(playlist.name, playlistName),
-          eq(playlist.ownerId, userId),
+          eq(schema.playlist.name, playlistName),
+          eq(schema.playlist.ownerId, userId),
         ),
       });
 
@@ -57,18 +58,16 @@ export default new KamiSubcommand({
       }
 
       const resources = await db.query.resource.findMany({
-        where: inArray(resource.resourceId, playlistData.resources),
+        where: inArray(schema.resource.resourceId, playlistData.resources),
       });
 
       const paginationManager = new PaginationManager<Resource>({
-        items: resources,
-        itemsPerPage: 10,
         customId: `playlist_view_${playlistData.id}`,
         embedBuilder: (items, currentPage, totalPages) => {
           const description = items.length > 0
             ? items.map((song, i) =>
-              `${(currentPage - 1) * 10 + i + 1}. ${hyperlink(song.title, song.url)}`,
-            ).join('\n')
+                `${(currentPage - 1) * 10 + i + 1}. ${hyperlink(song.title, song.url)}`,
+              ).join('\n')
             : '這個播放清單沒有任何歌曲';
 
           const embed = new EmbedBuilder()
@@ -79,6 +78,8 @@ export default new KamiSubcommand({
 
           return embed;
         },
+        items: resources,
+        itemsPerPage: 10,
       });
 
       await paginationManager.handle(interaction);
@@ -99,10 +100,10 @@ export default new KamiSubcommand({
     const focusedValue = interaction.options.getFocused();
 
     const userPlaylists = await db.query.playlist.findMany({
-      where: eq(playlist.ownerId, userId),
       columns: {
         name: true,
       },
+      where: eq(schema.playlist.ownerId, userId),
     });
 
     const filtered = userPlaylists

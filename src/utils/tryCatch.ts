@@ -1,9 +1,11 @@
-type Branded<T> = T & { __tryCatchTupleResult: never };
-type DisableArrayMethods<T> = T & Record<Exclude<keyof never[], 'length' | symbol>, never>;
-
-type DataErrorTuple<T, E> = Branded<
-  DisableArrayMethods<[error: E, data: T] & never[]>
->;
+/**
+ * Represents a failure result where `error` contains an error instance and `data` is `null`.
+ */
+export type Failure<E extends Error> = DataErrorTuple<null, E | Error>;
+/**
+ * Represents the result of an operation that can either succeed with `T` or fail with `E`.
+ */
+export type Result<T, E extends Error> = Failure<E> | Success<T>;
 
 /**
  * Represents a successful result where `data` is present and `error` is `null`.
@@ -11,23 +13,47 @@ type DataErrorTuple<T, E> = Branded<
 export type Success<T> = DataErrorTuple<T, null>;
 
 /**
- * Represents a failure result where `error` contains an error instance and `data` is `null`.
+ * A utility for handling synchronous and asynchronous operations within a try-catch block.
+ *
+ * @template F The function type for try-catch execution.
+ * @template E_ The base error type.
  */
-export type Failure<E extends Error> = DataErrorTuple<null, E | Error>;
+export type TryCatch<
+  F extends TryCatchFunc = TryCatchFunc,
+  E_ extends Error = Error,
+> = {
+  /**
+   * Executes an asynchronous function inside a try-catch block.
+   *
+   * @param fn The function or promise to execute.
+   * @param operationName Optional name added to `error.message` for better debugging and context.
+   * @returns A `Promise<Result<T, E>>` indicating success or failure.
+   */
+  async: <T, E extends Error = E_>(
+    fn: (() => Promise<T>) | Promise<T>,
+    operationName?: string,
+  ) => Promise<Result<T, E>>;
 
-/**
- * Represents the result of an operation that can either succeed with `T` or fail with `E`.
- */
-export type Result<T, E extends Error> = Success<T> | Failure<E>;
+  /**
+   * Creates a new `TryCatch` instance that handles additional error types.
+   *
+   * @template E Extends the existing error type.
+   * @returns A new `TryCatch` instance with extended error handling capabilities.
+   */
+  errors: <E extends Error>() => TryCatch<TryCatchFunc<E | E_>, E | E_>;
 
-/**
- * Resolves the return type based on whether `T` is a promise:
- * - If `T` is a `Promise<U>`, returns `Promise<Result<U, E>>`.
- * - Otherwise, returns `Result<T, E>`.
- */
-export type TryCatchResult<T, E extends Error> = T extends Promise<infer U>
-  ? Promise<Result<U, E>>
-  : Result<T, E>;
+  /**
+   * Executes a synchronous function inside a try-catch block.
+   *
+   * @param fn The function to execute.
+   * @param operationName Optional name added to `error.message` for better debugging and context.
+   * @returns A `Result<T, E>` indicating success or failure.
+   */
+  sync: <T, E extends Error = E_>(
+    fn: () => T,
+    operationName?: string,
+  ) => Result<T, E>;
+} & F;
 
 /**
  * Function type for handling try-catch logic.
@@ -40,52 +66,26 @@ export type TryCatchResult<T, E extends Error> = T extends Promise<infer U>
  * @param operationName Optional name added to `error.message` for better debugging and context.
  */
 export type TryCatchFunc<E_ extends Error = Error> = <T, E extends Error = E_>(
-  fn: T | (() => T),
+  fn: (() => T) | T,
   operationName?: string,
 ) => TryCatchResult<T, E>;
 
 /**
- * A utility for handling synchronous and asynchronous operations within a try-catch block.
- *
- * @template F The function type for try-catch execution.
- * @template E_ The base error type.
+ * Resolves the return type based on whether `T` is a promise:
+ * - If `T` is a `Promise<U>`, returns `Promise<Result<U, E>>`.
+ * - Otherwise, returns `Result<T, E>`.
  */
-export type TryCatch<
-  F extends TryCatchFunc = TryCatchFunc,
-  E_ extends Error = Error,
-> = F & {
-  /**
-   * Executes a synchronous function inside a try-catch block.
-   *
-   * @param fn The function to execute.
-   * @param operationName Optional name added to `error.message` for better debugging and context.
-   * @returns A `Result<T, E>` indicating success or failure.
-   */
-  sync: <T, E extends Error = E_>(
-    fn: () => T,
-    operationName?: string,
-  ) => Result<T, E>;
+export type TryCatchResult<T, E extends Error> = T extends Promise<infer U>
+  ? Promise<Result<U, E>>
+  : Result<T, E>;
 
-  /**
-   * Executes an asynchronous function inside a try-catch block.
-   *
-   * @param fn The function or promise to execute.
-   * @param operationName Optional name added to `error.message` for better debugging and context.
-   * @returns A `Promise<Result<T, E>>` indicating success or failure.
-   */
-  async: <T, E extends Error = E_>(
-    fn: Promise<T> | (() => Promise<T>),
-    operationName?: string,
-  ) => Promise<Result<T, E>>;
+type Branded<T> = { __tryCatchTupleResult: never } & T;
 
-  /**
-   * Creates a new `TryCatch` instance that handles additional error types.
-   *
-   * @template E Extends the existing error type.
-   * @returns A new `TryCatch` instance with extended error handling capabilities.
-   */
-  errors: <E extends Error>() => TryCatch<TryCatchFunc<E | E_>, E | E_>;
-};
+type DataErrorTuple<T, E> = Branded<
+  DisableArrayMethods<[error: E, data: T] & never[]>
+>;
+
+type DisableArrayMethods<T> = Record<Exclude<keyof never[], 'length' | symbol>, never> & T;
 
 /**
  * tryCatch - Error handling that can be synchronous or asynchronous
@@ -96,7 +96,7 @@ export type TryCatch<
  * @returns A Result, or a Promise resolving to a Result, depending on fn.
  */
 export const tryCatch: TryCatch = <T, E extends Error = Error>(
-  fn: T | (() => T),
+  fn: (() => T) | T,
   operationName?: string,
 ) => {
   try {
@@ -129,7 +129,7 @@ export const tryCatchAsync: TryCatch['async'] = async <
   T,
   E extends Error = Error,
 >(
-  fn: Promise<T> | (() => Promise<T>),
+  fn: (() => Promise<T>) | Promise<T>,
   operationName?: string,
 ) => {
   try {

@@ -5,19 +5,22 @@ import { pipeline } from 'node:stream';
 import { ActionRowBuilder, ButtonBuilder, ButtonStyle, Colors, EmbedBuilder, MessageFlags, inlineCode } from 'discord.js';
 import { AudioPlayerStatus, StreamType, VoiceConnectionStatus, createAudioPlayer, createAudioResource, entersState, joinVoiceChannel } from '@discordjs/voice';
 import { SoundCloud } from 'scdl-core';
+
 import prism from 'prism-media';
 import ytdl from 'youtube-dl-exec';
 
 import { formatDuration, getLyricsAtTime, progress } from '@/utils/resource';
-import Logger from '@/utils/logger';
 import { Platform } from '@/core/resource';
 import { db } from '@/database';
 import { formatLines } from '@/utils/string';
 import { logError } from '@/utils/callback';
 import { resource as resourceTable } from '@/database/schema';
 
-import type { AudioPlayer, AudioResource, PlayerSubscription, VoiceConnection } from '@discordjs/voice';
+import Logger from '@/utils/logger';
+
 import type { DiscordAPIError, Guild, GuildMember, GuildTextBasedChannel, Message, VoiceBasedChannel } from 'discord.js';
+import type { AudioPlayer, AudioResource, PlayerSubscription, VoiceConnection } from '@discordjs/voice';
+
 import type { KamiLyric, KamiResource } from '@/core/resource';
 import type { KamiClient } from '@/core/client';
 
@@ -32,14 +35,14 @@ const PlayerControls = (player: KamiMusicPlayer, status?: AudioPlayerStatus) => 
       .setStyle(ButtonStyle.Secondary),
     status == AudioPlayerStatus.Paused
       ? new ButtonBuilder()
-        .setCustomId('player:control-resume')
-        .setEmoji('▶️')
-        .setStyle(ButtonStyle.Secondary)
+          .setCustomId('player:control-resume')
+          .setEmoji('▶️')
+          .setStyle(ButtonStyle.Secondary)
       : new ButtonBuilder()
-        .setCustomId('player:control-pause')
-        .setEmoji('⏸️')
-        .setDisabled(!player.currentResource)
-        .setStyle(ButtonStyle.Secondary),
+          .setCustomId('player:control-pause')
+          .setEmoji('⏸️')
+          .setDisabled(!player.currentResource)
+          .setStyle(ButtonStyle.Secondary),
     new ButtonBuilder()
       .setCustomId('player:control-next')
       .setEmoji('⏭️')
@@ -81,47 +84,59 @@ const LyricsOffsetControl = new ActionRowBuilder<ButtonBuilder>()
   );
 
 export enum RepeatMode {
-  Forward = 0,
-  RepeatQueue = 1,
-  RepeatCurrent = 2,
-  Random = 3,
-  RandomNoRepeat = 4,
-  TrueRandom = 5,
   Backward = 6,
   BackwardRepeatQueue = 7,
+  Forward = 0,
+  Random = 3,
+  RandomNoRepeat = 4,
+  RepeatCurrent = 2,
+  RepeatQueue = 1,
+  TrueRandom = 5,
 };
 
 export const RepeatModeName = {
-  [RepeatMode.Forward]: '不重複',
-  [RepeatMode.RepeatQueue]: '循環',
-  [RepeatMode.RepeatCurrent]: '單曲重複',
-  [RepeatMode.Random]: '隨機',
-  [RepeatMode.RandomNoRepeat]: '隨機（不重複）',
-  [RepeatMode.TrueRandom]: '真隨機',
   [RepeatMode.Backward]: '倒序播放',
   [RepeatMode.BackwardRepeatQueue]: '倒序循環',
+  [RepeatMode.Forward]: '不重複',
+  [RepeatMode.Random]: '隨機',
+  [RepeatMode.RandomNoRepeat]: '隨機（不重複）',
+  [RepeatMode.RepeatCurrent]: '單曲重複',
+  [RepeatMode.RepeatQueue]: '循環',
+  [RepeatMode.TrueRandom]: '真隨機',
 } as Readonly<Record<RepeatMode, string>>;
 
 export class KamiMusicPlayer {
+  _volume = 1;
   client: KamiClient;
-  owner: GuildMember;
-  text: GuildTextBasedChannel;
-  voice: VoiceBasedChannel;
-  guild: Guild;
   connection!: VoiceConnection;
-  subscription?: PlayerSubscription;
-  player?: AudioPlayer;
-  message: Message | null = null;
-  tempFolderPath: string;
-
-  queue = [] as KamiResource[];
   currentIndex = 0;
+  currentResource: AudioResource<KamiResource> | null = null;
+  destroyed = false;
+  guild: Guild;
+  locked = false;
+  lyricsOffset = 0;
+  message: Message | null = null;
+
+  owner: GuildMember;
+  player?: AudioPlayer;
+  queue = [] as KamiResource[];
   repeat = RepeatMode.Forward;
   stopped = false;
-  locked = false;
-  destroyed = false;
+  subscription?: PlayerSubscription;
 
-  _volume = 1;
+  tempFolderPath: string;
+  text: GuildTextBasedChannel;
+
+  voice: VoiceBasedChannel;
+
+  get isPlaying() {
+    return this.player?.state.status == AudioPlayerStatus.Playing;
+  }
+
+  get paused() {
+    return this.player?.state.status == AudioPlayerStatus.Paused || this.player?.state.status == AudioPlayerStatus.AutoPaused;
+  }
+
   public get volume() {
     return this._volume * GlobalVolumeModifier;
   }
@@ -130,11 +145,6 @@ export class KamiMusicPlayer {
     this._volume = v;
   }
 
-  private _random = [] as KamiResource[];
-  private _transcoder: prism.FFmpeg | null = null;
-  currentResource: AudioResource<KamiResource> | null = null;
-
-  lyricsOffset = 0;
   private _currentLyrics: KamiLyric | null = null;
   private _lyricsTimer = setInterval(() => {
     if (!this.currentResource?.metadata?.metadata) return;
@@ -150,6 +160,10 @@ export class KamiMusicPlayer {
     this._currentLyrics = current;
     void this.updateMessage(this.currentResource.metadata, true);
   }, 100);
+
+  private _random = [] as KamiResource[];
+
+  private _transcoder: null | prism.FFmpeg = null;
 
   constructor(
     client: KamiClient,
@@ -207,40 +221,35 @@ export class KamiMusicPlayer {
     Logger.debug(`Created audio player for guild ${this.guild}`);
   }
 
-  get isPlaying() {
-    return this.player?.state.status == AudioPlayerStatus.Playing;
-  }
+  async addResource(resource: KamiResource | KamiResource[], index: number = this.queue.length) {
+    const current = this.queue[this.currentIndex];
 
-  get paused() {
-    return this.player?.state.status == AudioPlayerStatus.Paused || this.player?.state.status == AudioPlayerStatus.AutoPaused;
-  }
+    if (!Array.isArray(resource)) {
+      resource = [resource];
+    }
 
-  connect(channel: VoiceBasedChannel = this.voice) {
-    this.connection?.destroy();
+    this.queue.splice(index, 0, ...resource);
 
-    this.connection = joinVoiceChannel({
-      channelId: channel.id,
-      guildId: channel.guild.id,
-      adapterCreator: channel.guild.voiceAdapterCreator,
-      selfDeaf: true,
-      selfMute: false,
-    });
+    const nonFileResources = resource.filter((v) => v.type != Platform.File);
 
-    this.connection.on(VoiceConnectionStatus.Disconnected, () => {
-      Promise.race([
-        entersState(this.connection, VoiceConnectionStatus.Signalling, 5_000),
-        entersState(this.connection, VoiceConnectionStatus.Connecting, 5_000),
-      ]).catch(() => {
-        this.destroyed = true;
-        void this.destroy();
-      });
-    });
+    if (nonFileResources.length > 0) {
+      await db
+        .insert(resourceTable)
+        .values(nonFileResources.map((v) => ({ ...v.toJSON(), resourceId: `${v.id}@${v.type}` })))
+        .onConflictDoNothing({
+          target: [resourceTable.resourceId],
+        })
+        .catch(logError);
+    }
 
-    this.connection.on('error', (error) => {
-      Logger.error(error.message, error, this);
-    });
-
-    this.voice = channel;
+    if (this.isPlaying && this.currentResource) {
+      this.currentIndex = this.queue.indexOf(current);
+      void this.updateMessage(this.currentResource.metadata, true);
+    }
+    else {
+      this.currentIndex = this.queue.indexOf(resource[0]);
+      void this.play();
+    }
   }
 
   /*
@@ -267,6 +276,255 @@ export class KamiMusicPlayer {
     this._transcoder = new FFmpeg({ args : transcoderArgs });
   }
  */
+
+  backward() {
+    switch (this.repeat) {
+      case RepeatMode.Backward: {
+        if (this.currentIndex < this.queue.length - 1) {
+          this.currentIndex++;
+        }
+        else {
+          this.stop();
+          void this.updateMessage();
+          void this.updateVoiceStatus();
+          return;
+        }
+
+        break;
+      }
+
+      case RepeatMode.BackwardRepeatQueue: {
+        if (this.currentIndex < this.queue.length - 1) {
+          this.currentIndex++;
+        }
+        else {
+          this.currentIndex = 0;
+        }
+        break;
+      }
+
+      case RepeatMode.Forward: {
+        if (this.currentIndex > 0) {
+          this.currentIndex--;
+        }
+        else {
+          this.stop();
+          void this.updateMessage();
+          void this.updateVoiceStatus();
+          return;
+        }
+
+        break;
+      }
+
+      case RepeatMode.Random:
+      case RepeatMode.RandomNoRepeat:
+      case RepeatMode.TrueRandom: {
+        return;
+      }
+
+      case RepeatMode.RepeatCurrent: {
+        break;
+      }
+
+      case RepeatMode.RepeatQueue: {
+        if (this.currentIndex > 0) {
+          this.currentIndex--;
+        }
+        else {
+          this.currentIndex = this.queue.length - 1;
+        }
+        break;
+      }
+    }
+
+    void this.play(this.currentIndex);
+    return this.queue[this.currentIndex];
+  }
+
+  async buffer(resource: KamiResource): Promise<boolean> {
+    const cachePath = join(this.client.cacheFolderPath, 'audio', resource.id);
+
+    if (existsSync(cachePath)) {
+      resource.cache = cachePath;
+      return true;
+    }
+
+    try {
+      Logger.debug(`Start buffering resource ${resource}`);
+
+      const stream = await (async () => {
+        switch (resource.type) {
+          case Platform.SoundCloud:
+            return await SoundCloud.download(resource.url, {
+              highWaterMark: 1 << 25,
+            });
+
+          case Platform.YouTube:
+            return ytdl.exec(resource.url, {
+              addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
+              format: 'ba',
+              noCheckCertificates: true,
+              noWarnings: true,
+              output: '-',
+              preferFreeFormats: true,
+            }).stdout;
+        }
+      })();
+
+      const data = await new Response(stream).arrayBuffer();
+
+      writeFileSync(cachePath, new Uint8Array(data));
+      resource.cache = cachePath;
+
+      Logger.debug(`Buffered resource ${resource} at ${cachePath}`);
+      return true;
+    }
+    catch (error) {
+      Logger.error('Error while buffering', error, resource);
+      return false;
+    }
+  }
+
+  canInteract(member: GuildMember) {
+    return !this.locked || this.owner.id == member.id;
+  }
+
+  clearResources() {
+    const removed = this.queue.splice(0, this.queue.length);
+    this.currentIndex = 0;
+    this.currentResource = null;
+
+    if (this.isPlaying) {
+      this.player?.stop();
+    }
+
+    return removed;
+  }
+
+  connect(channel: VoiceBasedChannel = this.voice) {
+    this.connection?.destroy();
+
+    this.connection = joinVoiceChannel({
+      adapterCreator: channel.guild.voiceAdapterCreator,
+      channelId: channel.id,
+      guildId: channel.guild.id,
+      selfDeaf: true,
+      selfMute: false,
+    });
+
+    this.connection.on(VoiceConnectionStatus.Disconnected, () => {
+      Promise.race([
+        entersState(this.connection, VoiceConnectionStatus.Signalling, 5_000),
+        entersState(this.connection, VoiceConnectionStatus.Connecting, 5_000),
+      ]).catch(() => {
+        this.destroyed = true;
+        void this.destroy();
+      });
+    });
+
+    this.connection.on('error', (error) => {
+      Logger.error(error.message, error, this);
+    });
+
+    this.voice = channel;
+  }
+
+  destroy() {
+    if (this.message) {
+      void this.message.delete().catch(logError);
+    }
+
+    // Clean up temporary folder
+    if (existsSync(this.tempFolderPath)) {
+      rmSync(this.tempFolderPath, { force: true, recursive: true });
+    }
+
+    clearInterval(this._lyricsTimer);
+    this.subscription?.unsubscribe();
+    this.connection.destroy();
+    this.client.players.delete(this.guild.id);
+    this.destroyed = true;
+  }
+
+  forward() {
+    switch (this.repeat) {
+      case RepeatMode.Backward: {
+        if (this.currentIndex > 0) {
+          this.currentIndex--;
+        }
+        else {
+          this.stop();
+          void this.updateMessage();
+          void this.updateVoiceStatus();
+          return;
+        }
+
+        break;
+      }
+
+      case RepeatMode.BackwardRepeatQueue: {
+        if (this.currentIndex > 0) {
+          this.currentIndex--;
+        }
+        else {
+          this.currentIndex = this.queue.length - 1;
+        }
+        break;
+      }
+
+      case RepeatMode.Forward: {
+        if (this.currentIndex < this.queue.length - 1) {
+          this.currentIndex++;
+        }
+        else {
+          this.stop();
+          void this.updateMessage();
+          void this.updateVoiceStatus();
+          return;
+        }
+
+        break;
+      }
+
+      case RepeatMode.Random: {
+        this.currentIndex = Math.floor(
+          Math.random() * this.queue.length,
+        );
+        break;
+      }
+
+      case RepeatMode.RandomNoRepeat: {
+        if (this._random.length == 0) {
+          this._random = [...this.queue];
+        }
+
+        this._random = this._random.sort(
+          () => 0.5 - Math.random(),
+        );
+        const resource = this._random.shift();
+        this.currentIndex = this.queue.indexOf(resource!);
+        break;
+      }
+
+      case RepeatMode.RepeatCurrent: {
+        break;
+      }
+
+      case RepeatMode.RepeatQueue: {
+        if (this.currentIndex < this.queue.length - 1) {
+          this.currentIndex++;
+        }
+        else {
+          this.currentIndex = 0;
+        }
+        break;
+      }
+    }
+
+    void this.play(this.currentIndex);
+    return this.queue[this.currentIndex];
+  }
 
   async play(index = this.currentIndex) {
     if (this.isPlaying) {
@@ -312,14 +570,13 @@ export class KamiMusicPlayer {
       // "-af", `firequalizer=gain_entry='${Object.keys(this.equalizer).map(k => `entry(${k},${this.equalizer[k]})`).join(";")}',dynaudnorm=n=0:c=1`,
       // "-af", `bass=g=${this.audiofilter.bass}`,
     ];
-    // eslint-disable-next-line import-x/no-named-as-default-member
     this._transcoder = new prism.FFmpeg({ args: transcoderArgs });
 
     const audioResource = createAudioResource(
       pipeline(stream, this._transcoder, () => void 0),
       {
-        inputType: StreamType.Raw,
         inlineVolume: true,
+        inputType: StreamType.Raw,
         metadata: resource,
       },
     );
@@ -334,232 +591,6 @@ export class KamiMusicPlayer {
     Logger.debug(`Playing ${resource} at index ${index} in ${this.guild}`);
 
     return resource;
-  }
-
-  async buffer(resource: KamiResource): Promise<boolean> {
-    const cachePath = join(this.client.cacheFolderPath, 'audio', resource.id);
-
-    if (existsSync(cachePath)) {
-      resource.cache = cachePath;
-      return true;
-    }
-
-    try {
-      Logger.debug(`Start buffering resource ${resource}`);
-
-      const stream = await (async () => {
-        switch (resource.type) {
-          case Platform.YouTube:
-            // eslint-disable-next-line import-x/no-named-as-default-member
-            return ytdl.exec(resource.url, {
-              noCheckCertificates: true,
-              noWarnings: true,
-              preferFreeFormats: true,
-              addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
-              format: 'ba',
-              output: '-',
-            }).stdout;
-
-          case Platform.SoundCloud:
-            return await SoundCloud.download(resource.url, {
-              highWaterMark: 1 << 25,
-            });
-        }
-      })();
-
-      const data = await new Response(stream).arrayBuffer();
-
-      writeFileSync(cachePath, new Uint8Array(data));
-      resource.cache = cachePath;
-
-      Logger.debug(`Buffered resource ${resource} at ${cachePath}`);
-      return true;
-    }
-    catch (error) {
-      Logger.error('Error while buffering', error, resource);
-      return false;
-    }
-  }
-
-  forward() {
-    switch (this.repeat) {
-      case RepeatMode.Forward: {
-        if (this.currentIndex < this.queue.length - 1) {
-          this.currentIndex++;
-        }
-        else {
-          this.stop();
-          void this.updateMessage();
-          void this.updateVoiceStatus();
-          return;
-        }
-
-        break;
-      }
-
-      case RepeatMode.RepeatQueue: {
-        if (this.currentIndex < this.queue.length - 1) {
-          this.currentIndex++;
-        }
-        else {
-          this.currentIndex = 0;
-        }
-        break;
-      }
-
-      case RepeatMode.RepeatCurrent: {
-        break;
-      }
-
-      case RepeatMode.Random: {
-        this.currentIndex = Math.floor(
-          Math.random() * this.queue.length,
-        );
-        break;
-      }
-
-      case RepeatMode.RandomNoRepeat: {
-        if (this._random.length == 0) {
-          this._random = [...this.queue];
-        }
-
-        this._random = this._random.sort(
-          () => 0.5 - Math.random(),
-        );
-        const resource = this._random.shift();
-        this.currentIndex = this.queue.indexOf(resource!);
-        break;
-      }
-
-      case RepeatMode.Backward: {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-        }
-        else {
-          this.stop();
-          void this.updateMessage();
-          void this.updateVoiceStatus();
-          return;
-        }
-
-        break;
-      }
-
-      case RepeatMode.BackwardRepeatQueue: {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-        }
-        else {
-          this.currentIndex = this.queue.length - 1;
-        }
-        break;
-      }
-    }
-
-    void this.play(this.currentIndex);
-    return this.queue[this.currentIndex];
-  }
-
-  backward() {
-    switch (this.repeat) {
-      case RepeatMode.Forward: {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-        }
-        else {
-          this.stop();
-          void this.updateMessage();
-          void this.updateVoiceStatus();
-          return;
-        }
-
-        break;
-      }
-
-      case RepeatMode.RepeatQueue: {
-        if (this.currentIndex > 0) {
-          this.currentIndex--;
-        }
-        else {
-          this.currentIndex = this.queue.length - 1;
-        }
-        break;
-      }
-
-      case RepeatMode.RepeatCurrent: {
-        break;
-      }
-
-      case RepeatMode.Random:
-      case RepeatMode.RandomNoRepeat:
-      case RepeatMode.TrueRandom: {
-        return;
-      }
-
-      case RepeatMode.Backward: {
-        if (this.currentIndex < this.queue.length - 1) {
-          this.currentIndex++;
-        }
-        else {
-          this.stop();
-          void this.updateMessage();
-          void this.updateVoiceStatus();
-          return;
-        }
-
-        break;
-      }
-
-      case RepeatMode.BackwardRepeatQueue: {
-        if (this.currentIndex < this.queue.length - 1) {
-          this.currentIndex++;
-        }
-        else {
-          this.currentIndex = 0;
-        }
-        break;
-      }
-    }
-
-    void this.play(this.currentIndex);
-    return this.queue[this.currentIndex];
-  }
-
-  stop() {
-    this._transcoder?.destroy();
-    this.player?.stop();
-    this.currentResource = null;
-  }
-
-  async addResource(resource: KamiResource | KamiResource[], index: number = this.queue.length) {
-    const current = this.queue[this.currentIndex];
-
-    if (!Array.isArray(resource)) {
-      resource = [resource];
-    }
-
-    this.queue.splice(index, 0, ...resource);
-
-    const nonFileResources = resource.filter((v) => v.type != Platform.File);
-
-    if (nonFileResources.length > 0) {
-      await db
-        .insert(resourceTable)
-        .values(nonFileResources.map((v) => ({ ...v.toJSON(), resourceId: `${v.id}@${v.type}` })))
-        .onConflictDoNothing({
-          target: [resourceTable.resourceId],
-        })
-        .catch(logError);
-    }
-
-    if (this.isPlaying && this.currentResource) {
-      this.currentIndex = this.queue.indexOf(current);
-      void this.updateMessage(this.currentResource.metadata, true);
-    }
-    else {
-      this.currentIndex = this.queue.indexOf(resource[0]);
-      void this.play();
-    }
   }
 
   removeResource(index: number) {
@@ -591,38 +622,18 @@ export class KamiMusicPlayer {
     return removed;
   }
 
-  clearResources() {
-    const removed = this.queue.splice(0, this.queue.length);
-    this.currentIndex = 0;
+  stop() {
+    this._transcoder?.destroy();
+    this.player?.stop();
     this.currentResource = null;
-
-    if (this.isPlaying) {
-      this.player?.stop();
-    }
-
-    return removed;
-  }
-
-  async updateVoiceStatus(resource?: KamiResource) {
-    const statusText = resource ? `🎵 ${resource.title}` : '';
-
-    await this.client.rest
-      .put(
-        `/channels/${this.voice.id}/voice-status`,
-        {
-          body: {
-            status: statusText,
-          },
-        })
-      .catch(logError);
   }
 
   async updateMessage(resource?: KamiResource, edit = false) {
     const embed = new EmbedBuilder()
       .setColor(Colors.Blue)
       .setAuthor({
-        name: `正在播放 | ${this.guild.name}`,
         iconURL: this.guild.iconURL() ?? undefined,
+        name: `正在播放 | ${this.guild.name}`,
       })
       .setTimestamp();
 
@@ -643,24 +654,24 @@ export class KamiMusicPlayer {
         .setDescription('使用 /add 來添加項目')
         .setFields(
           {
+            inline: true,
             name: '#️⃣ 編號　　​',
             value: `${this.currentIndex + 1}`,
-            inline: true,
           },
           {
+            inline: true,
             name: '⌛ 長度　　​',
             value: resource.getLength(),
-            inline: true,
           },
           {
+            inline: true,
             name: '🔁 循環模式',
             value: RepeatModeName[this.repeat],
-            inline: true,
           },
         )
         .setFooter({
-          text: `由 ${resource.member?.displayName} 添加`,
           iconURL: resource.member?.displayAvatarURL(),
+          text: `由 ${resource.member?.displayName} 添加`,
         });
 
       components.push(PlayerControls(this, this.player?.state.status));
@@ -668,16 +679,16 @@ export class KamiMusicPlayer {
       if (resource.metadata && this.currentResource) {
         const playback = resource.length
           ? [
-            inlineCode(formatDuration(this.currentResource.playbackDuration)),
-            progress((this.currentResource.playbackDuration / resource.length) * 100),
-            inlineCode(resource.getLength()),
-          ].join(' ')
+              inlineCode(formatDuration(this.currentResource.playbackDuration)),
+              progress((this.currentResource.playbackDuration / resource.length) * 100),
+              inlineCode(resource.getLength()),
+            ].join(' ')
           : 'LIVE';
 
         embed.setDescription(playback)
           .setFooter({
-            text: `由 ${resource.member?.displayName} 添加 | 使用 /add 來添加項目`,
             iconURL: resource.member?.displayAvatarURL(),
+            text: `由 ${resource.member?.displayName} 添加 | 使用 /add 來添加項目`,
           });
 
         const lyrics = getLyricsAtTime(
@@ -703,9 +714,9 @@ export class KamiMusicPlayer {
     if (edit) {
       if (!this.message) return;
       await this.message.edit({
+        components,
         content,
         embeds: [embed],
-        components,
       }).catch((e: DiscordAPIError) => {
         if (e.code == 10008) {
           this.message = null;
@@ -719,9 +730,9 @@ export class KamiMusicPlayer {
     }
 
     this.message = await this.text.send({
+      components,
       content,
       embeds: [embed],
-      components,
       flags: MessageFlags.SuppressNotifications,
       options: {
         fetchReply: true,
@@ -729,24 +740,17 @@ export class KamiMusicPlayer {
     });
   }
 
-  canInteract(member: GuildMember) {
-    return !this.locked || this.owner.id == member.id;
-  }
+  async updateVoiceStatus(resource?: KamiResource) {
+    const statusText = resource ? `🎵 ${resource.title}` : '';
 
-  destroy() {
-    if (this.message) {
-      void this.message.delete().catch(logError);
-    }
-
-    // Clean up temporary folder
-    if (existsSync(this.tempFolderPath)) {
-      rmSync(this.tempFolderPath, { recursive: true, force: true });
-    }
-
-    clearInterval(this._lyricsTimer);
-    this.subscription?.unsubscribe();
-    this.connection.destroy();
-    this.client.players.delete(this.guild.id);
-    this.destroyed = true;
+    await this.client.rest
+      .put(
+        `/channels/${this.voice.id}/voice-status`,
+        {
+          body: {
+            status: statusText,
+          },
+        })
+      .catch(logError);
   }
 }
