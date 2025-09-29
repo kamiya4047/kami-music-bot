@@ -65,8 +65,8 @@ export default new KamiSubcommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -201,10 +201,10 @@ export default new KamiSubcommand({
     const focusedValue = interaction.options.getFocused();
 
     const userPlaylists = await db.query.playlist.findMany({
-      where: eq(schema.playlist.ownerId, userId),
       columns: {
         name: true,
       },
+      where: eq(schema.playlist.ownerId, userId),
     });
 
     const filtered = userPlaylists

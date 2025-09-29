@@ -88,8 +88,8 @@ export default new KamiSubcommand({
       await db.insert(schema.playlist).values({
         id,
         name,
-        resources,
         ownerId: interaction.user.id,
+        resources,
       });
 
       const successEmbed = user(interaction)

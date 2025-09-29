@@ -11,73 +11,79 @@ import type { Video } from '@/api/youtube/video';
 
 import type { KamiClient } from './client';
 
+export enum Platform {
+  File = 'file',
+  SoundCloud = 'soundcloud',
+  YouTube = 'youtube',
+}
+
 export interface KamiLyric {
   from: number;
-  to: number;
   line: RubyText[];
+  to: number;
   translation: string;
+}
+
+export interface KamiMetadata {
+  album: string;
+  arranger: string[];
+  artist: string[];
+  composer: string[];
+  cover: string;
+  diskNo: number;
+  hasRuby: boolean;
+  lyricist: string[];
+  lyrics: KamiLyric[];
+  script: string;
+  source: string;
+  tags: string[];
+  title: string;
+  trackNo: number;
+  year: number;
 }
 
 export interface KamiMetadataJson {
   $schema: string;
-  title: string;
   album: string;
-  cover: string;
+  arranger: string[];
   artist: string[];
   composer: string[];
-  arranger: string[];
-  lyricist: string[];
+  cover: string;
   diskNo: number;
-  trackNo: number;
-  year: number;
-  script: string;
-  source: string;
-  tags: string[];
+  lyricist: string[];
   lyrics: {
     from: number;
-    to: number;
     line: string;
+    to: number;
     translation: string;
   }[];
-}
-
-export interface KamiMetadata {
-  title: string;
-  album: string;
-  cover: string;
-  artist: string[];
-  composer: string[];
-  arranger: string[];
-  lyricist: string[];
-  diskNo: number;
-  trackNo: number;
-  year: number;
   script: string;
   source: string;
   tags: string[];
-  lyrics: KamiLyric[];
-  hasRuby: boolean;
+  title: string;
+  trackNo: number;
+  year: number;
 }
 
 interface KamiResourceOptions {
-  type: Platform;
   id: string;
-  title: string;
-  length: number | null;
-  url: string;
+  length: null | number;
   thumbnail: string;
+  title: string;
+  type: Platform;
+  url: string;
 }
 
 export class KamiResource {
-  type: Platform;
+  cache: null | string = null;
   id: string;
-  title: string;
-  length: number | null;
-  url: string;
-  thumbnail: string;
-  cache: string | null = null;
-  metadata: KamiMetadata | null = null;
+  length: null | number;
   member?: GuildMember;
+  metadata: KamiMetadata | null = null;
+  thumbnail: string;
+  title: string;
+  type: Platform;
+  url: string;
 
   constructor(client: KamiClient, options: KamiResourceOptions) {
     this.type = options.type;
@@ -96,35 +102,25 @@ export class KamiResource {
     this.metadata = getMetadata(options.title);
   }
 
-  setMember(member: GuildMember) {
-    this.member = member;
-    return this;
-  }
-
-  setCache(cache: string) {
-    this.cache = cache;
-    return this;
+  static soundcloud(client: KamiClient, track: Track): KamiResource {
+    return new KamiResource(client, {
+      id: String(track.id),
+      length: track.duration,
+      thumbnail: track.artwork_url ?? '',
+      title: track.title,
+      type: Platform.SoundCloud,
+      url: track.uri,
+    });
   }
 
   static youtube(client: KamiClient, video: Video): KamiResource {
     return new KamiResource(client, {
-      type: Platform.YouTube,
       id: video.id,
-      title: video.title,
       length: video.length,
-      url: video.shortUrl,
       thumbnail: video.thumbnail.url,
-    });
-  }
-
-  static soundcloud(client: KamiClient, track: Track): KamiResource {
-    return new KamiResource(client, {
-      type: Platform.SoundCloud,
-      id: String(track.id),
-      title: track.title,
-      length: track.duration,
-      url: track.uri,
-      thumbnail: track.artwork_url ?? '',
+      title: video.title,
+      type: Platform.YouTube,
+      url: video.shortUrl,
     });
   }
 
@@ -133,24 +129,28 @@ export class KamiResource {
     return formatDuration(this.length);
   }
 
-  toString() {
-    return `${this.title} (${this.id})`;
+  setCache(cache: string) {
+    this.cache = cache;
+    return this;
+  }
+
+  setMember(member: GuildMember) {
+    this.member = member;
+    return this;
   }
 
   toJSON() {
     return {
-      type: this.type,
       id: this.id,
-      title: this.title,
       length: this.length,
-      url: this.url,
       thumbnail: this.thumbnail,
+      title: this.title,
+      type: this.type,
+      url: this.url,
     };
   }
-}
 
-export enum Platform {
-  YouTube = 'youtube',
-  SoundCloud = 'soundcloud',
-  File = 'file',
+  toString() {
+    return `${this.title} (${this.id})`;
+  }
 }

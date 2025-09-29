@@ -25,8 +25,8 @@ export class KamiClient extends Client {
   commands = new Collection<string, KamiCommand>();
   contextMenus = new Collection<string, KamiContext>();
   players = new Collection<string, KamiMusicPlayer>();
-  version = pkg.version;
   resourceResolver: ResourceResolver;
+  version = pkg.version;
 
   constructor(options?: ClientOptions) {
     super({

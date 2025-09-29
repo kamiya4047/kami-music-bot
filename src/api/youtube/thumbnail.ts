@@ -1,13 +1,13 @@
 export interface APIThumbnail {
+  height: number;
   url: string;
   width: number;
-  height: number;
 }
 
 export class Thumbnail implements APIThumbnail {
+  height: number;
   url: string;
   width: number;
-  height: number;
 
   constructor(data: APIThumbnail) {
     this.url = data.url;

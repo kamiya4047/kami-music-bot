@@ -36,32 +36,17 @@ export default new EventHandler({
         case 'offset-reset':
           player.lyricsOffset = 0;
           break;
-        case 'offset+250ms':
-          player.lyricsOffset += 250;
-          break;
         case 'offset+1s':
           player.lyricsOffset += 1000;
+          break;
+        case 'offset+250ms':
+          player.lyricsOffset += 250;
           break;
       }
     }
 
     if (id.startsWith('control')) {
       switch (id) {
-        case 'control-prev':
-          player.backward();
-          return;
-        case 'control-next':
-          player.forward();
-          return;
-        case 'control-pause':
-          player.player?.pause();
-          break;
-        case 'control-resume':
-          player.player?.unpause();
-          break;
-        case 'control-remove':
-          player.removeResource(player.currentIndex);
-          break;
         case 'control-destroy':
           player.destroy();
           await interaction.reply({
@@ -69,6 +54,21 @@ export default new EventHandler({
             flags: [MessageFlags.Ephemeral],
           });
           return;
+        case 'control-next':
+          player.forward();
+          return;
+        case 'control-pause':
+          player.player?.pause();
+          break;
+        case 'control-prev':
+          player.backward();
+          return;
+        case 'control-remove':
+          player.removeResource(player.currentIndex);
+          break;
+        case 'control-resume':
+          player.player?.unpause();
+          break;
       }
     }
 

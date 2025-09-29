@@ -14,15 +14,15 @@ enum APIListKind {
 }
 
 interface APIResponse<T> {
-  kind: APIListKind;
   etag: string;
-  nextPageToken: string;
-  prevPageToken: string;
-  pageInfo: {
-    totalResults: number;
-    resultsPerPage: number;
-  };
   items: T[];
+  kind: APIListKind;
+  nextPageToken: string;
+  pageInfo: {
+    resultsPerPage: number;
+    totalResults: number;
+  };
+  prevPageToken: string;
 }
 
 const get = async <T = object>(endpoint: string, query: Record<string, string>) => {
@@ -43,8 +43,8 @@ const get = async <T = object>(endpoint: string, query: Record<string, string>) 
 
 export const fetchVideo = async (id: string) => {
   const query = {
-    part: 'contentDetails,snippet',
     id,
+    part: 'contentDetails,snippet',
   };
 
   const data = await get<APIVideo>(`/videos`, query);
@@ -54,9 +54,9 @@ export const fetchVideo = async (id: string) => {
 
 export const fetchVideos = async (id: string[]) => {
   const query = {
-    part: 'contentDetails,snippet',
     id: id.join(),
     maxResults: id.length.toString(),
+    part: 'contentDetails,snippet',
   };
 
   const data = await get<APIVideo>(`/videos`, query);
@@ -66,8 +66,8 @@ export const fetchVideos = async (id: string[]) => {
 
 export const fetchPlaylist = async (listId: string) => {
   const query = {
-    part: 'id,snippet',
     id: listId,
+    part: 'id,snippet',
   };
 
   const data = await get<APIPlaylist>(`/playlists`, query);
@@ -79,9 +79,9 @@ export const fetchPlaylist = async (listId: string) => {
 
 export const fetchPlaylistVideo = async (listId: string) => {
   const query = {
+    maxResults: '50',
     part: 'id,snippet,contentDetails',
     playlistId: listId,
-    maxResults: '50',
   };
 
   const data = await get<APIPlaylistItem>(`/playlistItems`, query);
@@ -105,10 +105,10 @@ export const fetchPlaylistVideo = async (listId: string) => {
 
 export const searchVideo = async (keyword: string) => {
   const query = {
-    part: 'snippet',
-    type: 'video',
-    q: keyword,
     maxResults: '25',
+    part: 'snippet',
+    q: keyword,
+    type: 'video',
   };
 
   const data = await get<APISearchResult>('/search', query);
@@ -120,8 +120,8 @@ export const parseUrl = (url: string) => {
   try {
     if (/^[A-Za-z0-9_-]{7,12}$/.test(url)) {
       return {
-        video: url,
         playlist: null,
+        video: url,
       };
     }
 
@@ -129,20 +129,20 @@ export const parseUrl = (url: string) => {
 
     if (u.hostname.endsWith('youtu.be')) {
       return {
-        video: u.pathname.slice(1),
         playlist: u.searchParams.get('list'),
+        video: u.pathname.slice(1),
       };
     }
 
     return {
-      video: u.searchParams.get('v'),
       playlist: u.searchParams.get('list'),
+      video: u.searchParams.get('v'),
     };
   }
   catch (_) {
     return {
-      video: null,
       playlist: null,
+      video: null,
     };
   }
 };

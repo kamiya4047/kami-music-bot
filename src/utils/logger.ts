@@ -29,39 +29,13 @@ const pad = (prefix = '') => {
 const blank = ' '.repeat(rawTime().length + pad().length + 1);
 
 const LoggerLevels = {
+  Debug: c.cyan.italic(pad('Debug')),
+  Error: c.red(pad('Error')),
   Info: c.blueBright(pad('Info')),
   Warn: c.yellow(pad('Warn')),
-  Error: c.red(pad('Error')),
-  Debug: c.cyan.italic(pad('Debug')),
 };
 
 export default class Logger {
-  static info(message: string) {
-    const messages = message.split('\n').map((line, i) => i == 0
-      ? `${time()} ${LoggerLevels.Info} ${c.white(line)}`
-      : `${blank} ${c.white(line)}`)
-      .join('\n');
-    console.log(messages);
-  }
-
-  static error(message: string, ...args: unknown[]) {
-    const messages = message.split('\n').map((line, i) => i == 0
-      ? `${time()} ${LoggerLevels.Error} ${c.redBright(line)}`
-      : `${blank} ${c.redBright(line)}`)
-      .join('\n');
-    console.error(messages);
-    if (args.length) {
-      for (const arg of args) {
-        const inspected = inspect(arg, { depth: 5, colors: true });
-        const inspectedMessages = inspected.split('\n').map((line, i) => i == 0
-          ? `${time()} ${LoggerLevels.Error} ${line}`
-          : `${blank} ${line}`)
-          .join('\n');
-        console.error(inspectedMessages);
-      }
-    }
-  }
-
   static debug(message: string, ...args: unknown[]) {
     if (env.NODE_ENV != 'development') return;
     const messages = message.split('\n').map((line, i) => i == 0
@@ -72,5 +46,31 @@ export default class Logger {
     if (args.length) {
       console.debug(...args);
     }
+  }
+
+  static error(message: string, ...args: unknown[]) {
+    const messages = message.split('\n').map((line, i) => i == 0
+      ? `${time()} ${LoggerLevels.Error} ${c.redBright(line)}`
+      : `${blank} ${c.redBright(line)}`)
+      .join('\n');
+    console.error(messages);
+    if (args.length) {
+      for (const arg of args) {
+        const inspected = inspect(arg, { colors: true, depth: 5 });
+        const inspectedMessages = inspected.split('\n').map((line, i) => i == 0
+          ? `${time()} ${LoggerLevels.Error} ${line}`
+          : `${blank} ${line}`)
+          .join('\n');
+        console.error(inspectedMessages);
+      }
+    }
+  }
+
+  static info(message: string) {
+    const messages = message.split('\n').map((line, i) => i == 0
+      ? `${time()} ${LoggerLevels.Info} ${c.white(line)}`
+      : `${blank} ${c.white(line)}`)
+      .join('\n');
+    console.log(messages);
   }
 };

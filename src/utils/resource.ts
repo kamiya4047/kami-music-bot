@@ -96,8 +96,70 @@ const metadataTree = (() => {
 })();
 const artists = Object.keys(metadataTree);
 
+export function getLyricsAtTime(timestamp: number, lyrics: KamiLyric[]): {
+  current: KamiLyric;
+  next?: KamiLyric;
+  prev?: KamiLyric;
+} {
+  let currentIndex = lyrics.findIndex((v) => timestamp >= v.from && timestamp < v.to);
+  let inInterlude = false;
+
+  if (currentIndex == -1) {
+    currentIndex = lyrics.findIndex((v, i, a) => timestamp >= v.to && timestamp < a[i + 1]?.from);
+    if (currentIndex != -1) {
+      inInterlude = true;
+    }
+  }
+
+  const isStart = timestamp < lyrics[0].from;
+  const isEnd = timestamp >= lyrics.at(-1)!.to;
+
+  const prev = inInterlude ? lyrics[currentIndex] : lyrics[currentIndex - 1];
+  const next = lyrics[currentIndex + 1];
+  const current = inInterlude
+    ? {
+        from: prev.to,
+        line: parseRubyText('♪'),
+        to: next.from,
+        translation: '',
+      }
+    : isEnd
+      ? lyrics.at(-1)!
+      : lyrics[currentIndex];
+
+  if (isStart) {
+    return {
+      current: {
+        from: 0,
+        line: parseRubyText('*start*'),
+        to: next.to,
+        translation: '',
+      },
+      next: next,
+    };
+  }
+
+  if (isEnd) {
+    return {
+      current: {
+        from: current.to,
+        line: parseRubyText('*end*'),
+        to: Infinity,
+        translation: '',
+      },
+      prev: current,
+    };
+  }
+
+  return {
+    current: current,
+    next: next,
+    prev: prev,
+  };
+}
+
 export function getMetadata(target: string): KamiMetadata | null {
-  let path: string | null = null;
+  let path: null | string = null;
 
   const artist = findInclude(target, artists);
 
@@ -139,73 +201,11 @@ export function getMetadata(target: string): KamiMetadata | null {
 
     return {
       ...metadata,
-      lyrics,
       hasRuby,
+      lyrics,
     };
   }
   catch (_) {
     return null;
   }
-}
-
-export function getLyricsAtTime(timestamp: number, lyrics: KamiLyric[]): {
-  prev?: KamiLyric;
-  current: KamiLyric;
-  next?: KamiLyric;
-} {
-  let currentIndex = lyrics.findIndex((v) => timestamp >= v.from && timestamp < v.to);
-  let inInterlude = false;
-
-  if (currentIndex == -1) {
-    currentIndex = lyrics.findIndex((v, i, a) => timestamp >= v.to && timestamp < a[i + 1]?.from);
-    if (currentIndex != -1) {
-      inInterlude = true;
-    }
-  }
-
-  const isStart = timestamp < lyrics[0].from;
-  const isEnd = timestamp >= lyrics.at(-1)!.to;
-
-  const prev = inInterlude ? lyrics[currentIndex] : lyrics[currentIndex - 1];
-  const next = lyrics[currentIndex + 1];
-  const current = inInterlude
-    ? {
-        from: prev.to,
-        to: next.from,
-        line: parseRubyText('♪'),
-        translation: '',
-      }
-    : isEnd
-      ? lyrics.at(-1)!
-      : lyrics[currentIndex];
-
-  if (isStart) {
-    return {
-      current: {
-        from: 0,
-        to: next.to,
-        line: parseRubyText('*start*'),
-        translation: '',
-      },
-      next: next,
-    };
-  }
-
-  if (isEnd) {
-    return {
-      prev: current,
-      current: {
-        from: current.to,
-        to: Infinity,
-        line: parseRubyText('*end*'),
-        translation: '',
-      },
-    };
-  }
-
-  return {
-    prev: prev,
-    current: current,
-    next: next,
-  };
 }

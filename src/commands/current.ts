@@ -17,8 +17,8 @@ export default new KamiCommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `正在播放 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL() ?? undefined,
+        name: `正在播放 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -63,19 +63,19 @@ export default new KamiCommand({
       .setDescription(playback)
       .setFields(
         {
+          inline: true,
           name: '#️⃣ 編號　　​',
           value: `${player.currentIndex + 1}`,
-          inline: true,
         },
         {
+          inline: true,
           name: '⌛ 長度　　​',
           value: resource.metadata.getLength(),
-          inline: true,
         },
         {
+          inline: true,
           name: '🔁 循環模式',
           value: RepeatModeName[player.repeat],
-          inline: true,
         },
       );
 

@@ -47,8 +47,8 @@ export default new KamiSubcommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -111,12 +111,12 @@ export default new KamiSubcommand({
         let video;
         if (existingResource) {
           video = new KamiResource(this, {
-            type: Platform.YouTube,
             id: existingResource.id,
-            title: existingResource.title,
             length: existingResource.length,
-            url: existingResource.url,
             thumbnail: existingResource.thumbnail,
+            title: existingResource.title,
+            type: Platform.YouTube,
+            url: existingResource.url,
           });
         }
         else {

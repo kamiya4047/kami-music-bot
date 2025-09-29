@@ -30,23 +30,23 @@ export const addToPlaylist = async (
       .where(eq(schema.playlist.id, playlist.id));
 
     const embed = createPlaylistEmbed({
-      user: interaction.member,
       description: resources.length === 1
         ? `✅ 已將「${bold(hyperlink(resources[0].title, resources[0].url))}」加入播放清單「${bold(playlist.name)}」`
         : `✅ 已將 ${resources.length} 個資源加入播放清單「${bold(playlist.name)}」`,
       thumbnail: resources[0].thumbnail,
+      user: interaction.member,
     });
 
     if ('update' in interaction) {
       await interaction.update({
-        embeds: [embed],
         components: [],
+        embeds: [embed],
       });
     }
     else {
       await interaction.editReply({
-        embeds: [embed],
         components: [],
+        embeds: [embed],
       });
     }
   }
@@ -57,14 +57,14 @@ export const addToPlaylist = async (
 
     if ('update' in interaction) {
       await interaction.update({
-        embeds: [embed],
         components: [],
+        embeds: [embed],
       });
     }
     else {
       await interaction.editReply({
-        embeds: [embed],
         components: [],
+        embeds: [embed],
       });
     }
   }

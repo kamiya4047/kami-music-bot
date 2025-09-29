@@ -23,8 +23,8 @@ export default new KamiCommand({
       const embed = new EmbedBuilder()
         .setColor(Colors.Red)
         .setAuthor({
-          name: `播放佇列 | ${interaction.guild.name}`,
           iconURL: interaction.guild.iconURL() ?? undefined,
+          name: `播放佇列 | ${interaction.guild.name}`,
         })
         .setDescription('❌ 目前沒有在播放音樂');
 
@@ -35,15 +35,13 @@ export default new KamiCommand({
     }
 
     const paginationManager = new PaginationManager({
-      items: player.queue,
-      itemsPerPage: 10,
       customId: `queue_${interaction.guild.id}`,
       embedBuilder: (items, currentPage, totalPages) => {
         const embed = new EmbedBuilder()
           .setColor(Colors.Blue)
           .setAuthor({
-            name: `播放佇列 | ${interaction.guild.name}`,
             iconURL: interaction.guild.iconURL()!,
+            name: `播放佇列 | ${interaction.guild.name}`,
           })
           .setDescription(
             items.length > 0
@@ -62,6 +60,8 @@ export default new KamiCommand({
           });
         return embed;
       },
+      items: player.queue,
+      itemsPerPage: 10,
     });
 
     const reply = paginationManager.createReply();

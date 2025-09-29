@@ -1,6 +1,7 @@
 import { defineConfig } from 'eslint/config';
 
 import javascript from '@eslint/js';
+import perfectionist from 'eslint-plugin-perfectionist';
 import prettyImport from '@kamiya4047/eslint-plugin-pretty-import';
 import stylistic from '@stylistic/eslint-plugin';
 import typescript from 'typescript-eslint';
@@ -31,9 +32,9 @@ export default defineConfig(
     arrowParens: true,
     semi: true,
   }),
+  perfectionist.configs['recommended-alphabetical'],
   {
     rules: {
-      '@typescript-eslint/restrict-template-expressions': ['off'],
       '@typescript-eslint/no-unused-vars': [
         'warn',
         {
@@ -42,10 +43,18 @@ export default defineConfig(
           caughtErrors: 'all',
           caughtErrorsIgnorePattern: '^_',
           destructuredArrayIgnorePattern: '^_',
-          varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
+          varsIgnorePattern: '^_',
         },
       ],
+      '@typescript-eslint/restrict-template-expressions': ['off'],
+    },
+  },
+  {
+    name: 'disables',
+    rules: {
+      'perfectionist/sort-imports': 'off',
+      'perfectionist/sort-named-imports': 'off',
     },
   },
 );

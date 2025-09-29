@@ -62,8 +62,6 @@ export default new KamiSubcommand({
       });
 
       const paginationManager = new PaginationManager<Resource>({
-        items: resources,
-        itemsPerPage: 10,
         customId: `playlist_view_${playlistData.id}`,
         embedBuilder: (items, currentPage, totalPages) => {
           const description = items.length > 0
@@ -80,6 +78,8 @@ export default new KamiSubcommand({
 
           return embed;
         },
+        items: resources,
+        itemsPerPage: 10,
       });
 
       await paginationManager.handle(interaction);
@@ -100,10 +100,10 @@ export default new KamiSubcommand({
     const focusedValue = interaction.options.getFocused();
 
     const userPlaylists = await db.query.playlist.findMany({
-      where: eq(schema.playlist.ownerId, userId),
       columns: {
         name: true,
       },
+      where: eq(schema.playlist.ownerId, userId),
     });
 
     const filtered = userPlaylists

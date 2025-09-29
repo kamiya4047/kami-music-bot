@@ -5,19 +5,23 @@ import Logger from '../utils/logger';
 import type { InteractionEditReplyOptions, InteractionReplyOptions, InteractionUpdateOptions } from 'discord.js';
 
 export interface PaginationOptions<T> {
+  currentPage?: number;
+  customId?: string;
+  embedBuilder: (items: T[], currentPage: number, totalPages: number) => EmbedBuilder;
   items: T[];
   itemsPerPage?: number;
-  currentPage?: number;
-  embedBuilder: (items: T[], currentPage: number, totalPages: number) => EmbedBuilder;
-  customId?: string;
 }
 
 export class PaginationManager<T> {
+  private currentPage: number;
+  private customId: string;
+  private embedBuilder: (items: T[], currentPage: number, totalPages: number) => EmbedBuilder;
   private items: T[];
   private itemsPerPage: number;
-  private currentPage: number;
-  private embedBuilder: (items: T[], currentPage: number, totalPages: number) => EmbedBuilder;
-  private customId: string;
+
+  private get totalPages(): number {
+    return Math.ceil(this.items.length / this.itemsPerPage);
+  }
 
   constructor(options: PaginationOptions<T>) {
     this.items = options.items;
@@ -25,42 +29,6 @@ export class PaginationManager<T> {
     this.currentPage = options.currentPage ?? 1;
     this.embedBuilder = options.embedBuilder;
     this.customId = options.customId ?? 'pagination';
-  }
-
-  private get totalPages(): number {
-    return Math.ceil(this.items.length / this.itemsPerPage);
-  }
-
-  private getCurrentPageItems(): T[] {
-    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
-    return this.items.slice(startIndex, startIndex + this.itemsPerPage);
-  }
-
-  private createButtons(): ActionRowBuilder<ButtonBuilder> {
-    const previousButton = new ButtonBuilder()
-      .setCustomId(`${this.customId}_prev`)
-      .setEmoji('◀️')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(this.currentPage === 1);
-
-    const nextButton = new ButtonBuilder()
-      .setCustomId(`${this.customId}_next`)
-      .setEmoji('▶️')
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(this.currentPage === this.totalPages);
-
-    const pageIndicator = new ButtonBuilder()
-      .setCustomId(`${this.customId}_page`)
-      .setLabel(`${this.currentPage}/${this.totalPages}`)
-      .setStyle(ButtonStyle.Secondary)
-      .setDisabled(true);
-
-    return new ActionRowBuilder<ButtonBuilder>()
-      .addComponents(
-        previousButton,
-        pageIndicator,
-        nextButton,
-      );
   }
 
   public createReply(): InteractionReplyOptions {
@@ -71,25 +39,9 @@ export class PaginationManager<T> {
     );
 
     return {
-      embeds: [embed],
       components: this.items.length > this.itemsPerPage ? [this.createButtons()] : [],
+      embeds: [embed],
     };
-  }
-
-  public async handleInteraction(interaction: MessageComponentInteraction): Promise<void> {
-    if (!interaction.customId.startsWith(this.customId)) return;
-
-    const action = interaction.customId.split('_')[1];
-
-    if (action === 'prev' && this.currentPage > 1) {
-      this.currentPage--;
-    }
-    else if (action === 'next' && this.currentPage < this.totalPages) {
-      this.currentPage++;
-    }
-
-    const reply = this.createReply();
-    await interaction.update(reply as InteractionUpdateOptions);
   }
 
   public async handle(interaction: CommandInteraction): Promise<void> {
@@ -120,5 +72,53 @@ export class PaginationManager<T> {
     catch (error) {
       Logger.error('Failed to setup pagination', error);
     }
+  }
+
+  public async handleInteraction(interaction: MessageComponentInteraction): Promise<void> {
+    if (!interaction.customId.startsWith(this.customId)) return;
+
+    const action = interaction.customId.split('_')[1];
+
+    if (action === 'prev' && this.currentPage > 1) {
+      this.currentPage--;
+    }
+    else if (action === 'next' && this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+
+    const reply = this.createReply();
+    await interaction.update(reply as InteractionUpdateOptions);
+  }
+
+  private createButtons(): ActionRowBuilder<ButtonBuilder> {
+    const previousButton = new ButtonBuilder()
+      .setCustomId(`${this.customId}_prev`)
+      .setEmoji('◀️')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(this.currentPage === 1);
+
+    const nextButton = new ButtonBuilder()
+      .setCustomId(`${this.customId}_next`)
+      .setEmoji('▶️')
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(this.currentPage === this.totalPages);
+
+    const pageIndicator = new ButtonBuilder()
+      .setCustomId(`${this.customId}_page`)
+      .setLabel(`${this.currentPage}/${this.totalPages}`)
+      .setStyle(ButtonStyle.Secondary)
+      .setDisabled(true);
+
+    return new ActionRowBuilder<ButtonBuilder>()
+      .addComponents(
+        previousButton,
+        pageIndicator,
+        nextButton,
+      );
+  }
+
+  private getCurrentPageItems(): T[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    return this.items.slice(startIndex, startIndex + this.itemsPerPage);
   }
 }

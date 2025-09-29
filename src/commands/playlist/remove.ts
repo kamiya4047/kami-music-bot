@@ -114,11 +114,11 @@ export default new KamiSubcommand({
     const focusedValue = interaction.options.getFocused();
 
     const userPlaylists = await db.query.playlist.findMany({
-      where: eq(playlist.ownerId, userId),
       columns: {
         name: true,
         resources: true,
       },
+      where: eq(playlist.ownerId, userId),
     });
 
     const filtered = userPlaylists

@@ -18,7 +18,6 @@ const command = new KamiCommand({
     .setDescription('Manage your playlists')
     .setDescriptionLocalization('ja', 'プレイリストを管理する')
     .setDescriptionLocalization('zh-TW', '管理你的播放清單'),
-  subcommands: [add, clear, create, delete_, list, remove, view],
   async execute(interaction) {
     const subcommand = interaction.options.getSubcommand();
     switch (subcommand) {
@@ -62,6 +61,7 @@ const command = new KamiCommand({
         break;
     }
   },
+  subcommands: [add, clear, create, delete_, list, remove, view],
 });
 
 export default command;

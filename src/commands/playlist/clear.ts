@@ -65,15 +65,15 @@ export default new KamiSubcommand({
       .embed;
 
     const response = await interaction.editReply({
-      embeds: [confirmEmbed],
       components: [row],
+      embeds: [confirmEmbed],
     });
 
     try {
       const confirmation = await response.awaitMessageComponent({
+        componentType: ComponentType.Button,
         filter: (i) => i.user.id === interaction.user.id,
         time: 60_000,
-        componentType: ComponentType.Button,
       });
 
       try {
@@ -86,8 +86,8 @@ export default new KamiSubcommand({
           .embed;
 
         await confirmation.update({
-          embeds: [successEmbed],
           components: [],
+          embeds: [successEmbed],
         });
       }
       catch (error) {
@@ -98,8 +98,8 @@ export default new KamiSubcommand({
           .embed;
 
         await confirmation.update({
-          embeds: [errorEmbed],
           components: [],
+          embeds: [errorEmbed],
         });
       }
     }
@@ -111,8 +111,8 @@ export default new KamiSubcommand({
         .embed;
 
       await interaction.editReply({
-        embeds: [timeoutEmbed],
         components: [],
+        embeds: [timeoutEmbed],
       }).catch(noop);
     }
   },
@@ -122,10 +122,10 @@ export default new KamiSubcommand({
     const focusedValue = interaction.options.getFocused();
 
     const userPlaylists = await db.query.playlist.findMany({
-      where: eq(playlist.ownerId, userId),
       columns: {
         name: true,
       },
+      where: eq(playlist.ownerId, userId),
     });
 
     const filtered = userPlaylists

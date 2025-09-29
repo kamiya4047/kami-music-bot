@@ -49,8 +49,8 @@ export default new KamiSubcommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -123,12 +123,12 @@ export default new KamiSubcommand({
       let resource;
       if (existingResource) {
         resource = new KamiResource(this, {
-          type: Platform.SoundCloud,
           id: existingResource.id,
-          title: existingResource.title,
           length: existingResource.length,
-          url: existingResource.url,
           thumbnail: existingResource.thumbnail,
+          title: existingResource.title,
+          type: Platform.SoundCloud,
+          url: existingResource.url,
         }).setMember(interaction.member);
       }
       else {

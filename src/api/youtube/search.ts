@@ -1,36 +1,37 @@
 import type { APIThumbnail, Thumbnail } from './thumbnail';
 
 export interface APISearchResult {
-  kind: 'youtube#searchResult';
   etag: string;
   id: {
     kind: 'youtube#video';
     videoId: string;
   };
+  kind: 'youtube#searchResult';
   snippet: {
-    publishedAt: string;
     channelId: string;
-    title: string;
+    channelTitle: string;
     description: string;
+    liveBroadcastContent: 'none';
+    publishedAt: string;
+    publishTime: string;
     thumbnails: {
       default: APIThumbnail;
-      medium: APIThumbnail;
       high: APIThumbnail;
+      medium: APIThumbnail;
     };
-    channelTitle: string;
-    liveBroadcastContent: 'none';
-    publishTime: string;
+    title: string;
   };
 }
 
 export class SearchResult {
-  id: string;
-  title: string;
-  thumbnail: Thumbnail;
   channel: {
     id: string;
     title: string;
   };
+
+  id: string;
+  thumbnail: Thumbnail;
+  title: string;
 
   url: string;
 

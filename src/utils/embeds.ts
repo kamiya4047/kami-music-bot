@@ -2,24 +2,40 @@ import { ChatInputCommandInteraction, Colors, EmbedBuilder, Guild, GuildMember, 
 
 import { capitalize } from './string';
 
-interface PlaylistEmbedOptions {
-  user: GuildMember;
-  description: string;
-  color?: number;
-  thumbnail?: string;
+interface EmbedOperation {
+  embed: EmbedBuilder;
+  error: (description: string) => EmbedOperation;
+  gray: (description: string) => EmbedOperation;
+  info: (description: string) => EmbedOperation;
+  success: (description: string) => EmbedOperation;
+  warn: (description: string) => EmbedOperation;
 }
 
+interface PlaylistEmbedOptions {
+  color?: number;
+  description: string;
+  thumbnail?: string;
+  user: GuildMember;
+}
+
+export function createErrorEmbed(user: GuildMember, message: string): EmbedBuilder {
+  return createPlaylistEmbed({
+    color: Colors.Red,
+    description: `❌ 加入播放清單失敗：${message}`,
+    user,
+  });
+}
 export function createPlaylistEmbed({
-  user,
-  description,
   color = Colors.Blue,
+  description,
   thumbnail,
+  user,
 }: PlaylistEmbedOptions): EmbedBuilder {
   const embed = new EmbedBuilder()
     .setColor(color)
     .setAuthor({
-      name: `播放清單 | ${user.displayName}`,
       iconURL: user.displayAvatarURL() ?? undefined,
+      name: `播放清單 | ${user.displayName}`,
     })
     .setDescription(description)
     .setTimestamp();
@@ -31,25 +47,9 @@ export function createPlaylistEmbed({
   return embed;
 }
 
-export function createErrorEmbed(user: GuildMember, message: string): EmbedBuilder {
-  return createPlaylistEmbed({
-    user,
-    description: `❌ 加入播放清單失敗：${message}`,
-    color: Colors.Red,
-  });
-}
-interface EmbedOperation {
-  embed: EmbedBuilder;
-  info: (description: string) => EmbedOperation;
-  success: (description: string) => EmbedOperation;
-  error: (description: string) => EmbedOperation;
-  warn: (description: string) => EmbedOperation;
-  gray: (description: string) => EmbedOperation;
-}
-
 export function guild(interaction: ChatInputCommandInteraction<'cached'>): EmbedOperation;
 export function guild(guild: Guild, title: string): EmbedOperation;
-export function guild(guild: Guild | ChatInputCommandInteraction<'cached'>, title?: string): EmbedOperation {
+export function guild(guild: ChatInputCommandInteraction<'cached'> | Guild, title?: string): EmbedOperation {
   if (guild instanceof ChatInputCommandInteraction) {
     title = guild.command?.nameLocalized ?? capitalize(guild.commandName);
     guild = guild.guild;
@@ -57,12 +57,20 @@ export function guild(guild: Guild | ChatInputCommandInteraction<'cached'>, titl
 
   const embed = new EmbedBuilder()
     .setAuthor({
-      name: `${title} | ${guild.name}`,
       iconURL: guild.iconURL() ?? undefined,
+      name: `${title} | ${guild.name}`,
     });
 
   const options = {
     embed,
+    error: (description: string) => {
+      embed.setColor(Colors.Red).setDescription(`❌ ${description}`);
+      return options;
+    },
+    gray: (description: string) => {
+      embed.setColor(Colors.Grey).setDescription(description);
+      return options;
+    },
     info: (description: string) => {
       embed.setColor(Colors.Blue).setDescription(description);
       return options;
@@ -71,20 +79,12 @@ export function guild(guild: Guild | ChatInputCommandInteraction<'cached'>, titl
       embed.setColor(Colors.Green).setDescription(`✅ ${description}`);
       return options;
     },
-    error: (description: string) => {
-      embed.setColor(Colors.Red).setDescription(`❌ ${description}`);
+    timestamp: (timestamp?: Date | null | number) => {
+      embed.setTimestamp(timestamp);
       return options;
     },
     warn: (description: string) => {
       embed.setColor(Colors.Yellow).setDescription(`⚠️ ${description}`);
-      return options;
-    },
-    gray: (description: string) => {
-      embed.setColor(Colors.Grey).setDescription(description);
-      return options;
-    },
-    timestamp: (timestamp?: Date | number | null) => {
-      embed.setTimestamp(timestamp);
       return options;
     },
   };
@@ -94,7 +94,7 @@ export function guild(guild: Guild | ChatInputCommandInteraction<'cached'>, titl
 
 export function user(interaction: ChatInputCommandInteraction): EmbedOperation;
 export function user(user: GuildMember | User, title: string): EmbedOperation;
-export function user(user: GuildMember | User | ChatInputCommandInteraction, title?: string): EmbedOperation {
+export function user(user: ChatInputCommandInteraction | GuildMember | User, title?: string): EmbedOperation {
   if (user instanceof ChatInputCommandInteraction) {
     title = user.command?.nameLocalized ?? capitalize(user.commandName);
     user = user.user;
@@ -102,12 +102,20 @@ export function user(user: GuildMember | User | ChatInputCommandInteraction, tit
 
   const embed = new EmbedBuilder()
     .setAuthor({
-      name: `${title} | ${user.displayName}`,
       iconURL: user.displayAvatarURL() ?? undefined,
+      name: `${title} | ${user.displayName}`,
     });
 
   const options = {
     embed,
+    error: (description: string) => {
+      embed.setColor(Colors.Red).setDescription(`❌ ${description}`);
+      return options;
+    },
+    gray: (description: string) => {
+      embed.setColor(Colors.Grey).setDescription(description);
+      return options;
+    },
     info: (description: string) => {
       embed.setColor(Colors.Blue).setDescription(description);
       return options;
@@ -116,20 +124,12 @@ export function user(user: GuildMember | User | ChatInputCommandInteraction, tit
       embed.setColor(Colors.Green).setDescription(`✅ ${description}`);
       return options;
     },
-    error: (description: string) => {
-      embed.setColor(Colors.Red).setDescription(`❌ ${description}`);
+    timestamp: (timestamp?: Date | null | number) => {
+      embed.setTimestamp(timestamp);
       return options;
     },
     warn: (description: string) => {
       embed.setColor(Colors.Yellow).setDescription(`⚠️ ${description}`);
-      return options;
-    },
-    gray: (description: string) => {
-      embed.setColor(Colors.Grey).setDescription(description);
-      return options;
-    },
-    timestamp: (timestamp?: Date | number | null) => {
-      embed.setTimestamp(timestamp);
       return options;
     },
   };

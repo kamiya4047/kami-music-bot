@@ -51,8 +51,8 @@ export default new KamiSubcommand({
 
     const embed = new EmbedBuilder()
       .setAuthor({
-        name: `新增 | ${interaction.guild.name}`,
         iconURL: interaction.guild.iconURL()!,
+        name: `新增 | ${interaction.guild.name}`,
       });
 
     const edit = () => interaction.editReply({
@@ -142,7 +142,7 @@ export default new KamiSubcommand({
     }
 
     const respond = async () => {
-      const result = await SoundCloud.search({ query: keyword, filter: 'tracks' }).catch(logError) as void | SearchResponse<Track>;
+      const result = await SoundCloud.search({ filter: 'tracks', query: keyword }).catch(logError) as SearchResponse<Track> | void;
 
       if (!result) {
         await interaction.respond([]).catch(logError);

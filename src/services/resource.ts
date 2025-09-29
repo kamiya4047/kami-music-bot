@@ -13,31 +13,6 @@ interface BaseResourceResolver {
   resolve(url: string): Promise<KamiResource | null>;
 }
 
-class YouTubeResolver implements BaseResourceResolver {
-  constructor(private client: KamiClient) {}
-
-  canHandle(url: string): boolean {
-    const ids = parseUrl(url);
-    return ids.video !== null;
-  }
-
-  async resolve(url: string): Promise<KamiResource | null> {
-    try {
-      const { video: id } = parseUrl(url);
-      if (!id) return null;
-
-      const video = await fetchVideo(id);
-      if (!video.duration) return null;
-
-      return KamiResource.youtube(this.client, video);
-    }
-    catch (error) {
-      Logger.error('Error while resolving YouTube resource', error);
-      return null;
-    }
-  }
-}
-
 class SoundCloudResolver implements BaseResourceResolver {
   constructor(private client: KamiClient) {}
 
@@ -64,6 +39,31 @@ class SoundCloudResolver implements BaseResourceResolver {
   }
 }
 
+class YouTubeResolver implements BaseResourceResolver {
+  constructor(private client: KamiClient) {}
+
+  canHandle(url: string): boolean {
+    const ids = parseUrl(url);
+    return ids.video !== null;
+  }
+
+  async resolve(url: string): Promise<KamiResource | null> {
+    try {
+      const { video: id } = parseUrl(url);
+      if (!id) return null;
+
+      const video = await fetchVideo(id);
+      if (!video.duration) return null;
+
+      return KamiResource.youtube(this.client, video);
+    }
+    catch (error) {
+      Logger.error('Error while resolving YouTube resource', error);
+      return null;
+    }
+  }
+}
+
 export class ResourceResolver {
   private resolvers: BaseResourceResolver[];
 
@@ -74,6 +74,10 @@ export class ResourceResolver {
     ];
   }
 
+  registerResolver(resolver: BaseResourceResolver) {
+    this.resolvers.push(resolver);
+  }
+
   async resolve(url: string): Promise<KamiResource | null> {
     const resolver = this.resolvers.find((r) => r.canHandle(url));
     if (!resolver) {
@@ -82,9 +86,5 @@ export class ResourceResolver {
     }
 
     return resolver.resolve(url);
-  }
-
-  registerResolver(resolver: BaseResourceResolver) {
-    this.resolvers.push(resolver);
   }
 }
