@@ -1,8 +1,9 @@
 
 ## 特別感謝
 
-<img src="https://github.com/user-attachments/assets/e4b793c8-58b3-4058-a246-24f646b4b3d7" 
-     alt="Logo" width="128" height="auto" align="left">
+<img src="https://branding.twds.com.tw/assets/twds_text_withbg.svg" alt="Logo"
+width="128" height="auto" align="right">
+
 [台灣數位串流有限公司 (Taiwan Digital Streaming Co.)](https://www.twds.com.tw/) 提供雲端運算資源、網路頻寬、以及技術諮詢支援。
 
 如有其他合作洽詢，請至 Discord 私訊我。
@@ -74,6 +75,6 @@
 ### 聯絡
 
 - Discord: [@kamiya4047](https://discord.com/users/437158166019702805)
-- 支援伺服器: https://discord.gg/3VTtVxjtWv
+- 支援伺服器: <https://discord.gg/3VTtVxjtWv>
 
 [![Support me on ko-fi!](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/H2H1UD9QE)
