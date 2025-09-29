@@ -12,7 +12,7 @@ export default defineConfig(
       'src/**/*.ts',
       'tools/**/*.ts',
       'eslint.config.ts',
-      'rollup.config.ts',
+      'rollup.config.mjs',
       'drizzle.config.ts',
     ],
   },

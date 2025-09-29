@@ -39,6 +39,6 @@
     "./tools/**/*",
     "drizzle.config.ts",
     "eslint.config.ts",
-    "rollup.config.ts",
+    "rollup.config.mjs",
   ]
 }
