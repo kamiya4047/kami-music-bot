@@ -1,4 +1,4 @@
-import { createReadStream, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import { createReadStream, existsSync, mkdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pipeline } from 'node:stream';
 
@@ -345,7 +345,7 @@ export class KamiMusicPlayer {
   async buffer(resource: KamiResource): Promise<boolean> {
     const cachePath = join(this.client.cacheFolderPath, 'audio', resource.id);
 
-    if (existsSync(cachePath)) {
+    if (existsSync(cachePath) && statSync(cachePath).size > 0) {
       resource.cache = cachePath;
       return true;
     }
